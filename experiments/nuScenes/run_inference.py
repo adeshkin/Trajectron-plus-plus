@@ -179,7 +179,7 @@ def main(params):
                     marker='d', color=agent_color, alpha=0.3,
                     linewidth=1, markersize=8, markerfacecolor='none')
 
-        ax.set_title(f'waymo_val_scene_{scene_idx}_ph_{ph}')
+        # ax.set_title(f'waymo_val_scene_{scene_idx}_ph_{ph}')
         plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png")
         fig.clf()
         plt.close()
