@@ -250,6 +250,28 @@ def trajectory_curvature(t):
     return (path_length / path_distance) - 1, path_length, path_distance
 
 
+def get_viewport(x, y):
+    """Gets the region containing the data.
+
+    Returns:
+        center_y: float. y coordinate for center of data.
+        center_x: float. x coordinate for center of data.
+        width: float. Width of data.
+    """
+    all_y = y
+    all_x = x
+
+    center_y = (np.max(all_y) + np.min(all_y)) / 2
+    center_x = (np.max(all_x) + np.min(all_x)) / 2
+
+    range_y = np.ptp(all_y)
+    range_x = np.ptp(all_x)
+
+    width = max(range_y, range_x)
+
+    return center_y, center_x, width
+
+
 def process_scene(scene, env):
     scene_id = int(scene['scene_id'])
     data = pd.DataFrame(columns=['frame_id',
@@ -325,10 +347,12 @@ def process_scene(scene, env):
     ###
     scene.x_min = x_min
     scene.y_min = y_min
-    scene.center_x = None
-    scene.center_y = None
-    scene.width = None
+    center_y, center_x, width = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+    scene.center_x = center_x
+    scene.center_y = center_y
+    scene.width = width
     ###
+
     for node_id in tqdm(pd.unique(data['node_id'])):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
