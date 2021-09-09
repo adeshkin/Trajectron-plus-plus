@@ -88,7 +88,7 @@ def main(params):
     my_patch = (center[0] - viewport_hw, center[1] - viewport_hw,
                 center[0] + viewport_hw, center[1] + viewport_hw)
 
-    for t in range(4, scene.timesteps - 1):
+    for t in range(8, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
