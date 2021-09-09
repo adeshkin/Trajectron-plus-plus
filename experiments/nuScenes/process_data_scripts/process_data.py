@@ -427,6 +427,8 @@ def process_scene(ns_scene, env, nusc, data_path):
 
 
 def process_data(data_path, version, output_path):
+    os.makedirs(output_path, exist_ok=True)
+
     nusc = NuScenes(version=version, dataroot=data_path, verbose=True)
     splits = create_splits_scenes()
 
