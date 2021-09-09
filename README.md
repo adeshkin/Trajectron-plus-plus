@@ -25,13 +25,12 @@ python -m ipykernel install --user --name trajpp --display-name "Python 3.6 (Tra
 ```
 
 ### Data Setup ###
-#### Pedestrian Datasets ####
-We've already included preprocessed data splits for the ETH and UCY Pedestrian datasets in this repository, you can see them in `experiments/pedestrians/raw`. In order to process them into a data format that our model can work with, execute the follwing.
-```
-cd experiments/pedestrians
-python process_data.py # This will take around 10-15 minutes, depending on your computer.
-```
+#### Waymo Dataset ####
+```bash
+cd experiments/nuScenes/process_data_scripts
 
+./process_waymo.sh
+```
 #### nuScenes Dataset ####
 Download the nuScenes dataset (this requires signing up on [their website](https://www.nuscenes.org/)). Note that the full dataset is very large, so if you only wish to test out the codebase and model then you can just download the nuScenes "mini" dataset which only requires around 4 GB of space. Extract the downloaded zip file's contents and place them in the `experiments/nuScenes` directory. Then, download the map expansion pack (v1.1) and copy the contents of the extracted `maps` folder into the `experiments/nuScenes/v1.0-mini/maps` folder. Finally, process them into a data format that our model can work with.
 ```
@@ -43,10 +42,7 @@ python process_data.py --data=./v1.0-mini --version="v1.0-mini" --output_path=..
 # For the full nuScenes dataset, use the following
 python process_data.py --data=./v1.0 --version="v1.0-trainval" --output_path=../processed
 ```
-In case you also want a validation set generated (by default this will just produce the training and test sets), replace line 406 in `process_data.py` with:
-```
-    val_scene_names = val_scenes
-```
+
 
 ## Model Training ##
 ### Pedestrian Dataset ###
