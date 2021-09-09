@@ -186,7 +186,7 @@ def main(params):
         del player_future, player_past, player_predict, veh_box
         gc.collect()
 
-        print(f"\nScene: {scene_idx}, timestep: {t}\n")
+        print(f"\nScene: {scene_idx}, time step: {t}\n")
 
 
 if __name__ == "__main__":

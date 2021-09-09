@@ -2,6 +2,6 @@ preprocessed_data_fn: '../processed_waymo/waymo_val.pkl'
 save_dir: 'visualizations/waymo'
 model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
 num_samples: 100
-scene_idx: 33
+scene_idx: 99
 ph: 6
 max_h: 10
