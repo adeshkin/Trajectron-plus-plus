@@ -88,7 +88,7 @@ def main(params):
     my_patch = (center[0] - viewport_hw, center[1] - viewport_hw,
                 center[0] + viewport_hw, center[1] + viewport_hw)
 
-    for t in range(1, scene.timesteps - 1):
+    for t in range(4, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
@@ -186,7 +186,7 @@ def main(params):
         del player_future, player_past, player_predict, veh_box
         gc.collect()
 
-        print(f"\nScene: {scene_idx}, timestep: {t}")
+        print(f"\nScene: {scene_idx}, timestep: {t}\n")
 
 
 if __name__ == "__main__":
