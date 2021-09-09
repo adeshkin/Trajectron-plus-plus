@@ -7,11 +7,10 @@ import argparse
 from tqdm import tqdm
 from pyquaternion import Quaternion
 from kalman_filter import NonlinearKinematicBicycle
-from sklearn.model_selection import train_test_split
 
-nu_path = './devkit/python-sdk/'
+nu_path = '../devkit/python-sdk/'
 sys.path.append(nu_path)
-sys.path.append("../../trajectron")
+sys.path.append("../../../trajectron")
 from nuscenes.nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from nuscenes.utils.splits import create_splits_scenes
@@ -401,17 +400,28 @@ def process_scene(ns_scene, env, nusc, data_path):
 def process_data(data_path, version, output_path, val_split):
     nusc = NuScenes(version=version, dataroot=data_path, verbose=True)
     splits = create_splits_scenes()
-    train_scenes, val_scenes = train_test_split(splits['train' if 'mini' not in version else 'mini_train'], test_size=val_split)
-    train_scene_names = splits['train' if 'mini' not in version else 'mini_train']
-    val_scene_names = []#val_scenes
-    test_scene_names = splits['val' if 'mini' not in version else 'mini_val']
+
+    train_scene_names = []
+    val_scene_names = []
+    test_scene_names = []
+    if version == "v1.0-trainval":
+        train_scene_names = splits['train']
+        val_scene_names = splits['val']
+        data_classes = ['train', 'val']
+    elif version == "v1.0-test":
+        test_scene_names = splits['test']
+        data_classes = ['test']
+    elif version == "v1.0-mini":
+        train_scene_names = splits['mini_train']
+        val_scene_names = splits['mini_val']
+        data_classes = ['train', 'val']
 
     ns_scene_names = dict()
     ns_scene_names['train'] = train_scene_names
     ns_scene_names['val'] = val_scene_names
     ns_scene_names['test'] = test_scene_names
 
-    for data_class in ['train', 'val', 'test']:
+    for data_class in data_classes:
         env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
         attention_radius = dict()
         attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0

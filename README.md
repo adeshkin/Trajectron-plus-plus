@@ -8,27 +8,20 @@ This repository contains the code for [Trajectron++: Dynamically-Feasible Trajec
 ### Cloning ###
 When cloning this repository, make sure you clone the submodules as well, with the following command:
 ```
-git clone --recurse-submodules <repository cloning URL>
+git clone --recurse-submodules https://github.com/adeshkin/Trajectron-plus-plus.git
 ```
-Alternatively, you can clone the repository as normal and then load submodules later with:
-```
-git submodule init # Initializing our local configuration file
-git submodule update # Fetching all of the data from the submodules at the specified commits
-```
-
-**NOTE:** If you would like to use the code as it was for ECCV 2020, please check out the `eccv2020` branch. The `master` branch will differ as new updates are made to the codebase (including potential non-interoperabilities between the two versions).
 
 ### Environment Setup ###
 First, we'll create a conda environment to hold the dependencies.
 ```
-conda create --name trajectron++ python=3.6 -y
-source activate trajectron++
+conda create --name traj++ python=3.6 -y
+conda activate traj++
 pip install -r requirements.txt
 ```
 
 Then, since this project uses IPython notebooks, we'll install this conda environment as a kernel.
 ```
-python -m ipykernel install --user --name trajectronpp --display-name "Python 3.6 (Trajectron++)"
+python -m ipykernel install --user --name trajpp --display-name "Python 3.6 (Traj++)"
 ```
 
 ### Data Setup ###
