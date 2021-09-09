@@ -82,12 +82,12 @@ def main(params):
     scene = eval_scenes[scene_idx]
 
     minpos = np.array([scene.x_min, scene.y_min])
-    center = (scene.center_x, scene.center_y)
+    center = (scene.center_x + scene.x_min, scene.center_y + scene.y_min)
     viewport_hw = scene.width
 
     my_patch = (center[0] - viewport_hw, center[1] - viewport_hw,
                 center[0] + viewport_hw, center[1] + viewport_hw)
-
+    node_id2agent_id = dict()
     for t in range(1, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
@@ -117,7 +117,13 @@ def main(params):
             player_past += minpos
             player_predict += minpos
 
-            agent_id = int(repr(node).split('/')[1])
+            node_id = repr(node).split('/')[1]
+            if node_id not in node_id2agent_id:
+                node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+                agent_id = node_id2agent_id[node_id]
+            else:
+                agent_id = node_id2agent_id[node_id]
+
             agent_color = COLORS[agent_id % NCOLORS]
 
             # Current Node Position
@@ -154,7 +160,13 @@ def main(params):
             player_predict += minpos
             player_past += minpos
 
-            agent_id = int(repr(node).split('/')[1])
+            node_id = repr(node).split('/')[1]
+            if node_id not in node_id2agent_id:
+                node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+                agent_id = node_id2agent_id[node_id]
+            else:
+                agent_id = node_id2agent_id[node_id]
+
             agent_car = CAR_IMAGES[agent_id % NCOLORS]
             agent_color = COLORS[agent_id % NCOLORS]
 
