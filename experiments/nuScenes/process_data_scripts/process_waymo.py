@@ -318,7 +318,7 @@ def process_scene(scene_id, parsed_data, env, center_y, center_x, width):
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width
-    for node_id in tqdm(pd.unique(data['node_id'])):
+    for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
         if node_df['x'].shape[0] < 2:
@@ -445,7 +445,7 @@ def process_data(data_path, version, output_path):
     env.attention_radius = attention_radius
 
     scenes = []
-    for scene_id, data in enumerate(dataset.as_numpy_iterator()):
+    for scene_id, data in tqdm(enumerate(dataset.as_numpy_iterator())):
         parsed_data = parse_data(data, features_description)
         center_y, center_x, width = get_viewport(parsed_data['state'], parsed_data['mask'])
         scene = process_scene(scene_id, parsed_data, env, center_y, center_x, width)
