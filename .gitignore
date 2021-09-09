@@ -2,7 +2,8 @@ pred_figs/
 processed/
 public-code/
 .idea/
-
+processed_waymo/
+processed_centerpoint_out/
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
