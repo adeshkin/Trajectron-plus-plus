@@ -325,7 +325,7 @@ def process_scene(scene_id, parsed_data, env, center_y, center_x, width):
             continue
 
         if not np.all(np.diff(node_df['frame_id']) == 1):
-            print('Occlusion')
+            # print('Occlusion')
             continue  # TODO Make better
 
         node_values = node_df[['x', 'y']].values
