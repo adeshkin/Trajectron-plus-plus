@@ -322,8 +322,13 @@ def process_scene(scene, env):
     data['y'] = data['y'] - y_min
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
+    ###
     scene.x_min = x_min
     scene.y_min = y_min
+    scene.center_x = None
+    scene.center_y = None
+    scene.width = None
+    ###
     for node_id in tqdm(pd.unique(data['node_id'])):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]

@@ -10,7 +10,7 @@ def main():
     img_height = 1000
     fps = 2
     model_name = 'int_ee'
-    scene_idx = 69
+    scene_idx = 99
     ph = 6
     num_samples = 100
 

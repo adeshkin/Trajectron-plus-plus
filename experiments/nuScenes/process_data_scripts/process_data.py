@@ -168,6 +168,33 @@ def trajectory_curvature(t):
     return (path_length / path_distance) - 1, path_length, path_distance
 
 
+def get_viewport(all_states, all_states_mask):
+    """Gets the region containing the data.
+
+    Args:
+        all_states: states of agents as an array of shape [num_agents, num_steps, 2].
+        all_states_mask: binary mask of shape [num_agents, num_steps] for `all_states`.
+
+    Returns:
+        center_y: float. y coordinate for center of data.
+        center_x: float. x coordinate for center of data.
+        width: float. Width of data.
+    """
+    valid_states = all_states[all_states_mask]
+    all_y = valid_states[..., 1]
+    all_x = valid_states[..., 0]
+
+    center_y = (np.max(all_y) + np.min(all_y)) / 2
+    center_x = (np.max(all_x) + np.min(all_x)) / 2
+
+    range_y = np.ptp(all_y)
+    range_x = np.ptp(all_x)
+
+    width = max(range_y, range_x)
+
+    return center_y, center_x, width
+
+
 def process_scene(ns_scene, env, nusc, data_path):
     scene_id = int(ns_scene['name'].replace('scene-', ''))
     data = pd.DataFrame(columns=['frame_id',
@@ -249,7 +276,13 @@ def process_scene(ns_scene, env, nusc, data_path):
     data['y'] = data['y'] - y_min
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id), aug_func=augment)
-
+    ###
+    scene.x_min = x_min
+    scene.y_min = y_min
+    scene.center_x = None
+    scene.center_y = None
+    scene.width = None
+    ###
     # Generate Maps
     map_name = nusc.get('log', ns_scene['log_token'])['location']
     nusc_map = NuScenesMap(dataroot=data_path, map_name=map_name)

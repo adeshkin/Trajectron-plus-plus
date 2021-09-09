@@ -190,7 +190,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    config_filename = 'waymo'
+    config_filename = 'nuscenes'
     with open(f'inference_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
     main(params)

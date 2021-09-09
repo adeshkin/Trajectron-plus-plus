@@ -314,11 +314,13 @@ def process_scene(scene_id, parsed_data, env, center_y, center_x, width):
     data['y'] = data['y'] - y_min
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
+    ###
     scene.x_min = x_min
     scene.y_min = y_min
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width
+    ###
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
@@ -474,8 +476,11 @@ def process_data(data_path, version, output_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', type=str, required=True)
-    parser.add_argument('--version', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    args = parser.parse_args()
-    process_data(args.data, args.version, args.output_path)
+    #parser.add_argument('--data', type=str, required=True)
+    #parser.add_argument('--version', type=str, required=True)
+    #parser.add_argument('--output_path', type=str, required=True)
+    #args = parser.parse_args()
+    # process_data(args.data, args.version, args.output_path)
+    process_data('/media/cds-k/Data_2/waymo_motion/validation/validation_tfexample.tfrecord-00000-of-00150',
+                 'val',
+                 '../../processed_waymo')
