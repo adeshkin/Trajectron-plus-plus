@@ -195,7 +195,7 @@ def main(params):
         plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png")
         fig.clf()
         plt.close()
-        del player_future, player_past, player_predict, veh_box
+        del player_future, player_past, player_predict, veh_box, predictions
         gc.collect()
 
         print(f"\nScene: {scene_idx}, time step: {t}\n")
