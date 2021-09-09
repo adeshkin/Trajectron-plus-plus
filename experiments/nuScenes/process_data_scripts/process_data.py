@@ -168,21 +168,16 @@ def trajectory_curvature(t):
     return (path_length / path_distance) - 1, path_length, path_distance
 
 
-def get_viewport(all_states, all_states_mask):
+def get_viewport(x, y):
     """Gets the region containing the data.
-
-    Args:
-        all_states: states of agents as an array of shape [num_agents, num_steps, 2].
-        all_states_mask: binary mask of shape [num_agents, num_steps] for `all_states`.
 
     Returns:
         center_y: float. y coordinate for center of data.
         center_x: float. x coordinate for center of data.
         width: float. Width of data.
     """
-    valid_states = all_states[all_states_mask]
-    all_y = valid_states[..., 1]
-    all_x = valid_states[..., 0]
+    all_y = y
+    all_x = x
 
     center_y = (np.max(all_y) + np.min(all_y)) / 2
     center_x = (np.max(all_x) + np.min(all_x)) / 2
@@ -279,9 +274,10 @@ def process_scene(ns_scene, env, nusc, data_path):
     ###
     scene.x_min = x_min
     scene.y_min = y_min
-    scene.center_x = None
-    scene.center_y = None
-    scene.width = None
+    center_y, center_x, width = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+    scene.center_x = center_x
+    scene.center_y = center_y
+    scene.width = width
     ###
     # Generate Maps
     map_name = nusc.get('log', ns_scene['log_token'])['location']
@@ -430,7 +426,7 @@ def process_scene(ns_scene, env, nusc, data_path):
     return scene
 
 
-def process_data(data_path, version, output_path, val_split):
+def process_data(data_path, version, output_path):
     nusc = NuScenes(version=version, dataroot=data_path, verbose=True)
     splits = create_splits_scenes()
 
@@ -507,9 +503,12 @@ def process_data(data_path, version, output_path, val_split):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', type=str, required=True)
-    parser.add_argument('--version', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--val_split', type=int, default=0.15)
-    args = parser.parse_args()
-    process_data(args.data, args.version, args.output_path, args.val_split)
+    #parser.add_argument('--data', type=str, required=True)
+    #parser.add_argument('--version', type=str, required=True)
+    #parser.add_argument('--output_path', type=str, required=True)
+
+    #args = parser.parse_args()
+    #process_data(args.data, args.version, args.output_path)
+    process_data('/media/cds-k/data/nuScenes/v1.0-mini',
+                 "v1.0-mini",
+                 '../../processed')
