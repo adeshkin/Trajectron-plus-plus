@@ -1,7 +1,7 @@
-model: 'models/models_09_Sep_2021_17_28_38_int_ee'
+model: 'models/int_ee'
 checkpoint: 12
-data: '../processed/nuScenes_test_full.pkl'
+data: '../processed/nuScenes_test_full_old.pkl'
 output_path: 'results'
-output_tag: 'int_ee'
+output_tag: 'int_ee_boris_old'
 node_type: 'VEHICLE'
 prediction_horizon: [6, 8]
