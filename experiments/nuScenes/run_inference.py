@@ -119,12 +119,12 @@ def main(params):
             player_predict += minpos
 
             node_id = repr(node).split('/')[1]
-            if node_id not in node_id2agent_id:
-                node_id2agent_id[node_id] = len(node_id2agent_id) + 1
-                agent_id = node_id2agent_id[node_id]
-            else:
-                agent_id = node_id2agent_id[node_id]
-
+            #if node_id not in node_id2agent_id:
+            #    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+            #    agent_id = node_id2agent_id[node_id]
+            #else:
+            #    agent_id = node_id2agent_id[node_id]
+            agent_id = int(node_id)
             agent_color = COLORS[agent_id % NCOLORS]
 
             # Current Node Position
@@ -162,11 +162,11 @@ def main(params):
             player_past += minpos
 
             node_id = repr(node).split('/')[1]
-            if node_id not in node_id2agent_id:
-                node_id2agent_id[node_id] = len(node_id2agent_id) + 1
-                agent_id = node_id2agent_id[node_id]
-            else:
-                agent_id = node_id2agent_id[node_id]
+            #if node_id not in node_id2agent_id:
+            #    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+            #    agent_id = node_id2agent_id[node_id]
+            #else:
+            #    agent_id = node_id2agent_id[node_id]
             agent_id = int(node_id)
             agent_car = CAR_IMAGES[agent_id % NCOLORS]
             agent_color = COLORS[agent_id % NCOLORS]
