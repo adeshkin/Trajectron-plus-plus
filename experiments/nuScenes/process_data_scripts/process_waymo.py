@@ -179,12 +179,10 @@ def get_viewport(all_states, all_states_mask):
     center_y = (np.max(all_y) + np.min(all_y)) / 2
     center_x = (np.max(all_x) + np.min(all_x)) / 2
 
-    range_y = np.ptp(all_y)
-    range_x = np.ptp(all_x)
+    height = np.ptp(all_y)
+    width = np.ptp(all_x)
 
-    width = max(range_y, range_x)
-
-    return center_y, center_x, width
+    return center_y, center_x, width, height
 
 
 def parse_data(data, features_description):
@@ -243,7 +241,7 @@ def parse_data(data, features_description):
     return parsed_data
 
 
-def process_scene(scene_id, parsed_data, env, center_y, center_x, width):
+def process_scene(scene_id, parsed_data, env, center_y, center_x, width, height):
     data = pd.DataFrame(columns=['frame_id',
                                  'type',
                                  'node_id',
@@ -320,6 +318,7 @@ def process_scene(scene_id, parsed_data, env, center_y, center_x, width):
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width
+    scene.height = height
     ###
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
@@ -450,8 +449,8 @@ def process_data(data_path, version, output_path):
     scenes = []
     for scene_id, data in tqdm(enumerate(dataset.as_numpy_iterator())):
         parsed_data = parse_data(data, features_description)
-        center_y, center_x, width = get_viewport(parsed_data['state'], parsed_data['mask'])
-        scene = process_scene(scene_id, parsed_data, env, center_y, center_x, width)
+        center_y, center_x, width, height = get_viewport(parsed_data['state'], parsed_data['mask'])
+        scene = process_scene(scene_id, parsed_data, env, center_y, center_x, width, height)
         scenes.append(scene)
 
     print(f'Processed {len(scenes):.2f} scenes')
