@@ -83,8 +83,8 @@ def main(params):
 
     minpos = np.array([scene.x_min, scene.y_min])
     center = (scene.center_x, scene.center_y)
-    width = scene.width
-    height = scene.height
+    width = scene.width + 50
+    height = scene.height + 50
 
     my_patch = (center[0] - width / 2, center[1] - height / 2,
                 center[0] + width / 2, center[1] + height / 2)
@@ -167,7 +167,7 @@ def main(params):
                 agent_id = node_id2agent_id[node_id]
             else:
                 agent_id = node_id2agent_id[node_id]
-
+            agent_id = int(node_id)
             agent_car = CAR_IMAGES[agent_id % NCOLORS]
             agent_color = COLORS[agent_id % NCOLORS]
 
