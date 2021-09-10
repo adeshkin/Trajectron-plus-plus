@@ -2,6 +2,6 @@ preprocessed_data_fn: '../processed/nuScenes_train_mini_full.pkl'
 save_dir: 'visualizations/nuscenes'
 model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
 num_samples: 100
-scene_idx: 7
+scene_idx: 6
 ph: 6
 max_h: 10

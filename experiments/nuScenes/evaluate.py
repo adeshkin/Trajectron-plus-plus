@@ -2,7 +2,7 @@ import sys
 import os
 import dill
 import json
-import argparse
+import yaml
 import torch
 import numpy as np
 import pandas as pd
@@ -20,16 +20,6 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--model", help="model full path", type=str)
-parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=int)
-parser.add_argument("--data", help="full path to data file", type=str)
-parser.add_argument("--output_path", help="path to output csv file", type=str)
-parser.add_argument("--output_tag", help="name tag for output file", type=str)
-parser.add_argument("--node_type", help="node type to evaluate", type=str)
-parser.add_argument("--prediction_horizon", nargs='+', help="prediction horizon", type=int, default=None)
-args = parser.parse_args()
 
 
 def compute_road_violations(predicted_trajs, map, channel):
@@ -64,10 +54,14 @@ def load_model(model_dir, env, ts=100):
 
 
 if __name__ == "__main__":
-    with open(args.data, 'rb') as f:
+    config_filename = 'nuscenes'
+    with open(f'eval_configs/{config_filename}.yaml', 'r') as file:
+        params = yaml.load(file, yaml.Loader)
+
+    with open(params['data'], 'rb') as f:
         env = dill.load(f, encoding='latin1')
 
-    eval_stg, hyperparams = load_model(args.model, env, ts=args.checkpoint)
+    eval_stg, hyperparams = load_model(params['model'], env, ts=params['checkpoint'])
 
     if 'override_attention_radius' in hyperparams:
         for attention_radius_override in hyperparams['override_attention_radius']:
@@ -81,8 +75,7 @@ if __name__ == "__main__":
         scene.calculate_scene_graph(env.attention_radius,
                                     hyperparams['edge_addition_filter'],
                                     hyperparams['edge_removal_filter'])
-
-    for ph in args.prediction_horizon:
+    for ph in params['prediction_horizon']:
         print(f"Prediction Horizon: {ph}")
         max_hl = hyperparams['maximum_history_length']
 
@@ -113,14 +106,14 @@ if __name__ == "__main__":
                                                                        prune_ph_to_future=False,
                                                                        kde=False)
 
-                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
-                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
+                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[params['node_type']]['ade']))
+                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[params['node_type']]['fde']))
 
             print(np.mean(eval_fde_batch_errors))
             pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'ml'}
-                         ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_most_likely_z.csv'))
+                         ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_ade_most_likely_z.csv'))
             pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'ml'}
-                         ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_most_likely_z.csv'))
+                         ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_fde_most_likely_z.csv'))
 
 
             ############### FULL ###############
@@ -152,9 +145,9 @@ if __name__ == "__main__":
                 eval_road_viols_batch = []
                 for t in prediction_dict.keys():
                     for node in prediction_dict[t].keys():
-                        if node.type == args.node_type:
+                        if node.type == params['node_type']:
                             viols = compute_road_violations(prediction_dict[t][node],
-                                                            scene.map[args.node_type],
+                                                            scene.map[params['node_type']],
                                                             channel=0)
                             if viols == 2000:
                                 viols = 0
@@ -171,15 +164,15 @@ if __name__ == "__main__":
                                                                        map=None,
                                                                        prune_ph_to_future=False)
 
-                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[args.node_type]['ade']))
-                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[args.node_type]['fde']))
-                eval_kde_nll = np.hstack((eval_kde_nll, batch_error_dict[args.node_type]['kde']))
+                eval_ade_batch_errors = np.hstack((eval_ade_batch_errors, batch_error_dict[params['node_type']]['ade']))
+                eval_fde_batch_errors = np.hstack((eval_fde_batch_errors, batch_error_dict[params['node_type']]['fde']))
+                eval_kde_nll = np.hstack((eval_kde_nll, batch_error_dict[params['node_type']]['kde']))
 
         pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_ade_full.csv'))
+                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_ade_full.csv'))
         pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_fde_full.csv'))
+                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_fde_full.csv'))
         pd.DataFrame({'value': eval_kde_nll, 'metric': 'kde', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_kde_full.csv'))
+                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_kde_full.csv'))
         pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}
-                     ).to_csv(os.path.join(args.output_path, args.output_tag + "_" + str(ph) + '_rv_full.csv'))
+                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_rv_full.csv'))

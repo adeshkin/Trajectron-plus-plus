@@ -1,0 +1,7 @@
+model: 'models/models_09_Sep_2021_17_28_38_int_ee'
+checkpoint: 12
+data: '../processed/nuScenes_test_full.pkl'
+output_path: 'results'
+output_tag: 'int_ee'
+node_type: 'VEHICLE'
+prediction_horizon: [6, 8]
