@@ -14,7 +14,8 @@ sys.path.append("../../../trajectron")
 from nuscenes.nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from nuscenes.utils.splits import create_splits_scenes
-from environment import Environment, Scene, Node, GeometricMap, derivative_of
+from environment import Environment, Scene, Node, GeometricMap
+from environment import derivative_of_old as derivative_of
 
 scene_blacklist = [499, 515, 517]
 

@@ -31,3 +31,16 @@ def derivative_of(x, dt=1, radian=False):
 
     return dx
 
+
+def derivative_of_old(x, dt=1, radian=False):
+    if radian:
+        x = make_continuous_copy(x)
+
+    if x[~np.isnan(x)].shape[-1] < 2:
+        return np.zeros_like(x)
+
+    dx = np.full_like(x, np.nan)
+    dx[~np.isnan(x)] = np.gradient(x[~np.isnan(x)], dt)
+
+    return dx
+
