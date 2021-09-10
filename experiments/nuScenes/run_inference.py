@@ -119,12 +119,15 @@ def main(params):
             player_predict += minpos
 
             node_id = repr(node).split('/')[1]
-            #if node_id not in node_id2agent_id:
-            #    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
-            #    agent_id = node_id2agent_id[node_id]
-            #else:
-            #    agent_id = node_id2agent_id[node_id]
-            agent_id = int(node_id)
+            if 'nuscenes' in params['save_dir']:
+                if node_id not in node_id2agent_id:
+                    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+                    agent_id = node_id2agent_id[node_id]
+                else:
+                    agent_id = node_id2agent_id[node_id]
+            else:
+                agent_id = int(node_id)
+
             agent_color = COLORS[agent_id % NCOLORS]
 
             # Current Node Position
@@ -162,12 +165,14 @@ def main(params):
             player_past += minpos
 
             node_id = repr(node).split('/')[1]
-            #if node_id not in node_id2agent_id:
-            #    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
-            #    agent_id = node_id2agent_id[node_id]
-            #else:
-            #    agent_id = node_id2agent_id[node_id]
-            agent_id = int(node_id)
+            if 'nuscenes' in params['save_dir']:
+                if node_id not in node_id2agent_id:
+                    node_id2agent_id[node_id] = len(node_id2agent_id) + 1
+                    agent_id = node_id2agent_id[node_id]
+                else:
+                    agent_id = node_id2agent_id[node_id]
+            else:
+                agent_id = int(node_id)
             agent_car = CAR_IMAGES[agent_id % NCOLORS]
             agent_color = COLORS[agent_id % NCOLORS]
 
@@ -203,7 +208,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    config_filename = 'waymo'
+    config_filename = 'nuscenes'
     with open(f'inference_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
     main(params)
