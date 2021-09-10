@@ -261,6 +261,8 @@ def process_scene(ns_scene, env, nusc, data_path):
     data.sort_values('frame_id', inplace=True)
     max_timesteps = data['frame_id'].max()
 
+    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+
     x_min = np.round(data['x'].min() - 50)
     x_max = np.round(data['x'].max() + 50)
     y_min = np.round(data['y'].min() - 50)
@@ -273,7 +275,7 @@ def process_scene(ns_scene, env, nusc, data_path):
     ###
     scene.x_min = x_min
     scene.y_min = y_min
-    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width

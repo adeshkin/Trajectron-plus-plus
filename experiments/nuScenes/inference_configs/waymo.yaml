@@ -1,5 +1,5 @@
-preprocessed_data_fn: '../processed_waymo/waymo_val.pkl'
-save_dir: 'visualizations/waymo'
+preprocessed_data_fn: '../processed_waymo/waymo_val_old.pkl'
+save_dir: 'visualizations/waymo_old'
 model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
 num_samples: 100
 scene_idx: 99

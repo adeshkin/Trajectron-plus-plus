@@ -14,7 +14,8 @@ from kalman_filter import NonlinearKinematicBicycle
 nu_path = '../devkit/python-sdk/'
 sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
-from environment import Environment, Scene, Node, derivative_of
+from environment import Environment, Scene, Node
+from environment import derivative_of_old as derivative_of
 
 
 FREQUENCY = 2
@@ -333,6 +334,9 @@ def process_scene(scene, env):
 
     data.sort_values('frame_id', inplace=True)
     max_timesteps = data['frame_id'].max()
+
+    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+
     x_min = np.round(data['x'].min() - 50)
     x_max = np.round(data['x'].max() + 50)
     y_min = np.round(data['y'].min() - 50)
@@ -345,7 +349,7 @@ def process_scene(scene, env):
     ###
     scene.x_min = x_min
     scene.y_min = y_min
-    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width

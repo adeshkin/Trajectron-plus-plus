@@ -82,7 +82,7 @@ def main(params):
     scene = eval_scenes[scene_idx]
 
     minpos = np.array([scene.x_min, scene.y_min])
-    center = (scene.center_x + scene.x_min, scene.center_y + scene.y_min)
+    center = (scene.center_x, scene.center_y)
     width = scene.width
     height = scene.height
 
@@ -203,7 +203,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    config_filename = 'nuscenes'
+    config_filename = 'waymo'
     with open(f'inference_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
     main(params)
