@@ -8,6 +8,8 @@ visualizations/
 videos/
 models/
 results/
+processed_old/
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
