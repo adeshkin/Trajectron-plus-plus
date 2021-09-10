@@ -12,6 +12,7 @@ class Scene(object):
         self.center_x = None
         self.center_y = None
         self.width = None
+        self.height = None
         ###
         self.map = map
         self.timesteps = timesteps

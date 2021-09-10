@@ -76,14 +76,14 @@ def main(params):
     eval_stg, hyp = load_model(model_dir, eval_env, ts=12)
 
     #
-    save_dir = f"{params['save_dir']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}"
+    save_dir = f"{params['save_dir']}_/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}"
     os.makedirs(f"{save_dir}/bev_maps", exist_ok=True)
 
     scene = eval_scenes[scene_idx]
 
     minpos = np.array([scene.x_min, scene.y_min])
     center = (scene.center_x + scene.x_min, scene.center_y + scene.y_min)
-    viewport_hw = scene.width
+    viewport_hw = scene.width - 60
 
     my_patch = (center[0] - viewport_hw, center[1] - viewport_hw,
                 center[0] + viewport_hw, center[1] + viewport_hw)

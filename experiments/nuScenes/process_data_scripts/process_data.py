@@ -182,12 +182,10 @@ def get_viewport(x, y):
     center_y = (np.max(all_y) + np.min(all_y)) / 2
     center_x = (np.max(all_x) + np.min(all_x)) / 2
 
-    range_y = np.ptp(all_y)
-    range_x = np.ptp(all_x)
+    height = np.ptp(all_y)
+    width = np.ptp(all_x)
 
-    width = max(range_y, range_x)
-
-    return center_y, center_x, width
+    return center_y, center_x, width, height
 
 
 def process_scene(ns_scene, env, nusc, data_path):
@@ -274,10 +272,11 @@ def process_scene(ns_scene, env, nusc, data_path):
     ###
     scene.x_min = x_min
     scene.y_min = y_min
-    center_y, center_x, width = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
     scene.center_x = center_x
     scene.center_y = center_y
     scene.width = width
+    scene.height = height
     ###
     # Generate Maps
     map_name = nusc.get('log', ns_scene['log_token'])['location']
