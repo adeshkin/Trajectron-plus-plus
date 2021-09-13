@@ -13,8 +13,8 @@ nu_path = '../devkit/python-sdk/'
 sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
-from environment import derivative_of_old as derivative_of
-
+# from environment import derivative_of_old as derivative_of
+from environment import derivative_of
 
 FREQUENCY = 2
 dt = 1 / FREQUENCY

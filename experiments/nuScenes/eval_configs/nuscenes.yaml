@@ -1,7 +1,7 @@
-model: 'models/vel_ee'
+model: 'models/int_ee'
 checkpoint: 12
 data: '../processed_old/nuScenes_test_full.pkl'
 output_path: 'results'
-output_tag: 'vel_ee_boris_old'
+output_tag: 'int_ee_boris_old'
 node_type: 'VEHICLE'
 prediction_horizon: [2, 4, 6, 8]
