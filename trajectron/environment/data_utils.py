@@ -44,3 +44,18 @@ def derivative_of_old(x, dt=1, radian=False):
 
     return dx
 
+
+def derivative_of_new(x, dt=1, radian=False):
+    if radian:
+        x = make_continuous_copy(x)
+
+    if x[~np.isnan(x)].shape[-1] < 2:
+        return np.zeros_like(x)
+
+    dx = np.full_like(x, np.nan)
+    dx[0] = (x[1] - x[0]) / dt
+    dx[1] = (x[1] - x[0]) / dt
+    dx[2:] = np.gradient(x, dt)[1:-1]
+
+    return dx
+
