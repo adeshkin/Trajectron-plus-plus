@@ -57,7 +57,9 @@ if __name__ == "__main__":
     config_filename = 'nuscenes'
     with open(f'eval_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
+
     os.makedirs(params['output_path'], exist_ok=True)
+
     with open(params['data'], 'rb') as f:
         env = dill.load(f, encoding='latin1')
 
