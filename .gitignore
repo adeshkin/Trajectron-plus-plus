@@ -9,6 +9,7 @@ videos/
 models/
 results/
 processed_old/
+processed_new/
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
