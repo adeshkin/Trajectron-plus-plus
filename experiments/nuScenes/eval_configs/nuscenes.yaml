@@ -1,7 +1,7 @@
 model: 'models/models_int_ee_new'
-checkpoint: 12
+checkpoint: 20
 data: '../processed_new/nuScenes_test_full.pkl'
-output_path: 'results/models_int_ee_new'
-output_tag: 'int_ee_new'
+output_path: 'results/models_int_ee_new_20'
+output_tag: 'int_ee_new_20'
 node_type: 'VEHICLE'
 prediction_horizon: [2, 4, 6, 8]
