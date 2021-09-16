@@ -7,6 +7,7 @@ import argparse
 from tqdm import tqdm
 from pyquaternion import Quaternion
 from kalman_filter import NonlinearKinematicBicycle
+from sklearn.model_selection import train_test_split
 
 nu_path = '../devkit/python-sdk/'
 sys.path.append(nu_path)
@@ -428,12 +429,18 @@ def process_scene(ns_scene, env, nusc, data_path):
     return scene
 
 
-def process_data(data_path, version, output_path):
+def process_data(data_path, version, output_path, val_split):
     os.makedirs(output_path, exist_ok=True)
 
     nusc = NuScenes(version=version, dataroot=data_path, verbose=True)
     splits = create_splits_scenes()
 
+    train_scenes, val_scenes = train_test_split(splits['train' if 'mini' not in version else 'mini_train'],
+                                                test_size=val_split)
+    train_scene_names = splits['train' if 'mini' not in version else 'mini_train']
+    val_scene_names = val_scenes
+    test_scene_names = splits['val' if 'mini' not in version else 'mini_val']
+    '''
     train_scene_names = []
     val_scene_names = []
     test_scene_names = []
@@ -448,7 +455,8 @@ def process_data(data_path, version, output_path):
         train_scene_names = splits['mini_train']
         val_scene_names = splits['mini_val']
         data_classes = ['train', 'val']
-
+    '''
+    data_classes = ['train', 'val', 'test']
     ns_scene_names = dict()
     ns_scene_names['train'] = train_scene_names
     ns_scene_names['val'] = val_scene_names
@@ -510,7 +518,9 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=str, required=True)
     parser.add_argument('--version', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
+    parser.add_argument('--val_split', type=int, default=0.15)
 
     args = parser.parse_args()
-    process_data(args.data, args.version, args.output_path)
+    process_data(args.data, args.version, args.output_path, args.val_split)
+
 
