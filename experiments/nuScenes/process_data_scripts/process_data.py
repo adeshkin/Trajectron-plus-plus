@@ -16,8 +16,8 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from nuscenes.utils.splits import create_splits_scenes
 from environment import Environment, Scene, Node, GeometricMap
-#from environment import derivative_of_old as derivative_of
-from environment import derivative_of
+from environment import derivative_of_old as derivative_of
+#from environment import derivative_of
 scene_blacklist = [499, 515, 517]
 
 FREQUENCY = 2
@@ -456,7 +456,7 @@ def process_data(data_path, version, output_path, val_split):
         val_scene_names = splits['mini_val']
         data_classes = ['train', 'val']
     '''
-    data_classes = ['train', 'val', 'test']
+    data_classes = ['val']
     ns_scene_names = dict()
     ns_scene_names['train'] = train_scene_names
     ns_scene_names['val'] = val_scene_names

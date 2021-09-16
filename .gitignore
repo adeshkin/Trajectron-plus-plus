@@ -10,6 +10,10 @@ models/
 results/
 processed_old/
 processed_new/
+processed_boris/
+processed_boris_new/
+processed_boris_old/
+
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
