@@ -1,0 +1,8 @@
+dataset_name: 'sdc'
+preprocessed_data_fn: '../processed_sdc/sdc_validation_old_dt_0.6_pr.pkl'
+save_dir: 'visualizations/sdc_validation_old_dt_0.6_pr'
+model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
+num_samples: 100
+scene_idx: 2
+ph: 6
+max_h: 10
