@@ -6,11 +6,12 @@ do
     if [[ $data_dir == *".pkl" ]]; then
       model=./models/my_int_ee_new
       model_name=$(basename $model)
+      track=$(basename $data_dir)
       python evaluate_centerpoint_out.py \
         --model=$model \
         --checkpoint=12 \
         --data=$data_dir \
-        --output_path=/media/cds-k/data/nuScenes/traj++_results_centerpoint_out_ped/$model_name \
+        --output_path=/media/cds-k/data/nuScenes/traj++_results_centerpoint_out_ped/$model_name/$track \
         --output_tag=$model_name
     fi
 done
