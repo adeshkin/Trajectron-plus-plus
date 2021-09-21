@@ -3,7 +3,7 @@
 
 for data_dir in /media/cds-k/data/nuScenes/traj++_processed_data/processed_centerpoint_out_new_no_minus_50_dur_180s/*
 do
-    if [[ $path == *".pkl" ]]; then
+    if [[ $data_dir == *".pkl" ]]; then
       model=./models/my_int_ee_new
       model_name=$(basename $model)
       python evaluate_centerpoint_out.py \
