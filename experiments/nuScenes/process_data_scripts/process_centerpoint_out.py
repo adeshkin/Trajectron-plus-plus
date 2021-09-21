@@ -15,7 +15,7 @@ nu_path = '../devkit/python-sdk/'
 sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
-from environment import derivative_of_old as derivative_of
+from environment import derivative_of_new as derivative_of
 
 
 FREQUENCY = 2
@@ -498,7 +498,7 @@ def process_data(data_dir, filename, output_path):
         }
     }
 
-    msgs = load_msgs_as_list(f'{data_dir}/{filename}.yaml')
+    msgs = load_msgs_as_list(f'{data_dir}/{filename}')
     scenes = MessagesToScenes(time_step=cfg['dataloader']['in_time_res_sec'],
                               scene_duration_sec=cfg['dataloader']['scene_duration_sec'],
                               score_threshold=cfg['dataloader']['score_threshold'])

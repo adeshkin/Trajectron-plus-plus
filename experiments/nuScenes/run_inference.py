@@ -102,6 +102,9 @@ def main(params):
         prediction_dict, histories_dict, futures_dict = \
             prediction_output_to_trajectories(predictions, dt=scene.dt, max_h=max_h, ph=ph, map=None)
 
+        if len(prediction_dict) == 0:
+            continue
+
         v_nodes = list(filter(lambda k: 'VEHICLE' in repr(k), predictions[t].keys()))
         p_nodes = list(filter(lambda k: 'PEDESTRIAN' in repr(k), predictions[t].keys()))
 
@@ -204,7 +207,7 @@ def main(params):
         plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png", bbox_inches='tight')
         fig.clf()
         plt.close()
-        del player_future, player_past, player_predict, veh_box, predictions
+        del player_future, player_past, player_predict, predictions
         gc.collect()
 
         print(f"\nScene: {scene_idx}, time step: {t}\n")

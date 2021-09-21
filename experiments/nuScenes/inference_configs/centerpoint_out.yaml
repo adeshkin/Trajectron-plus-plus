@@ -1,5 +1,6 @@
+dataset_name: 'georgia_on_square'
 preprocessed_data_fn: '/media/cds-k/data/nuScenes/traj++_processed_data/processed_centerpoint/georgia_on_square_2021-07-19-14-12-40_8.pkl'
-save_dir: 'visualizations/centerpoint_out/georgia_on_square_2021-07-19-14-12-40_8'
+save_dir: 'visualizations/centerpoint_out/georgia_on_square'
 model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
 num_samples: 100
 scene_idx: 1
