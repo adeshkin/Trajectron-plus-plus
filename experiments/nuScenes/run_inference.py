@@ -76,7 +76,7 @@ def main(params):
     eval_stg, hyp = load_model(model_dir, eval_env, ts=12)
 
     #
-    save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir']}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
+    save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir'].split('processed_')[-1]}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
     os.makedirs(f"{save_dir}/bev_maps", exist_ok=True)
 
     scene = eval_scenes[scene_idx]

@@ -494,7 +494,7 @@ def process_data(data_dir, filename, output_path):
             'in_time_res_sec': 0.1,
             'out_time_res_sec': 0.5,
             'score_threshold': 0,
-            'scene_duration_sec': 20,
+            'scene_duration_sec': 180,
         }
     }
 

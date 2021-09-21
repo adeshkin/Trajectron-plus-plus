@@ -1,8 +1,8 @@
-dataset_name: 'mipt_cifra_arktika_lol_2021-06-10-22-01-27_0'
-preprocessed_data_dir: 'processed_centerpoint_out_new'
+dataset_name: 'mipt_kvant_2021-06-10-23-11-06_0'
+preprocessed_data_dir: 'processed_centerpoint_out_new_no_minus_50'
 save_dir: 'visualizations'
 model_name: 'my_int_ee_new'
 num_samples: 100
-scene_idx: 4
+scene_idx: 1
 ph: 6
 max_h: 2
