@@ -50,7 +50,7 @@ def create_fig(my_patch):
 
 
 def main(params):
-    preprocessed_data_fn = params['preprocessed_data_fn']
+    preprocessed_data_fn = f"/media/cds-k/data/nuScenes/traj++_processed_data/{params['preprocessed_data_dir']}/{params['dataset_name']}.pkl"
     scene_idx = params['scene_idx']
     ph = params['ph']
     max_h = params['max_h']
@@ -76,7 +76,7 @@ def main(params):
     eval_stg, hyp = load_model(model_dir, eval_env, ts=12)
 
     #
-    save_dir = f"{params['save_dir']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}"
+    save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir']}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
     os.makedirs(f"{save_dir}/bev_maps", exist_ok=True)
 
     scene = eval_scenes[scene_idx]
@@ -203,7 +203,7 @@ def main(params):
         plt.grid()
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        plt.title(f"dataset: {params['dataset_name']}\nmodel: {model_name}\nscene: {scene_idx}\nph:{ph}")
+        plt.title(f"dataset: {params['dataset_name']}\nmodel: {model_name}\nscene: {scene_idx}\nph:{ph}\nmax_h:{max_h}")
         plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png", bbox_inches='tight')
         fig.clf()
         plt.close()

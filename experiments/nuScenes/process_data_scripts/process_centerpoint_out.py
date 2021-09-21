@@ -356,10 +356,10 @@ def process_scene(scene, env):
 
     center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
 
-    x_min = np.round(data['x'].min() - 50)
-    x_max = np.round(data['x'].max() + 50)
-    y_min = np.round(data['y'].min() - 50)
-    y_max = np.round(data['y'].max() + 50)
+    x_min = np.round(data['x'].min())
+    x_max = np.round(data['x'].max())
+    y_min = np.round(data['y'].min())
+    y_max = np.round(data['y'].max())
 
     data['x'] = data['x'] - x_min
     data['y'] = data['y'] - y_min
@@ -389,7 +389,7 @@ def process_scene(scene, env):
         x = node_values[:, 0]
         y = node_values[:, 1]
         heading = node_df['heading'].values
-        '''
+
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
             # Kalman filter Agent
             vx = derivative_of(x, scene.dt)
@@ -443,7 +443,7 @@ def process_scene(scene, env):
                 elif curvature > .1:
                     curv_0_1 += 1
                     node_frequency_multiplier = 3 * int(np.floor(total / curv_0_1))
-        '''
+
         vx = derivative_of(x, scene.dt)
         vy = derivative_of(y, scene.dt)
         ax = derivative_of(vx, scene.dt)
@@ -527,6 +527,7 @@ def process_data(data_dir, filename, output_path):
     env.scenes = traj_scenes
 
     if len(traj_scenes) > 0:
+        filename = filename.split('.yaml')[0]
         data_dict_path = os.path.join(output_path, f'{filename}.pkl')
         with open(data_dict_path, 'wb') as f:
             dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
