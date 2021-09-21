@@ -3,6 +3,7 @@ import os
 import dill
 import json
 import yaml
+import argparse
 import torch
 import numpy as np
 import pandas as pd
@@ -20,6 +21,14 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", help="model full path", type=str)
+parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=int)
+parser.add_argument("--data", help="full path to data file", type=str)
+parser.add_argument("--output_path", help="path to output csv file", type=str)
+parser.add_argument("--output_tag", help="name tag for output file", type=str)
+args = parser.parse_args()
 
 
 def compute_road_violations(predicted_trajs, map, channel):
@@ -58,12 +67,13 @@ if __name__ == "__main__":
     with open(f'eval_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
 
-    os.makedirs(params['output_path'], exist_ok=True)
-
-    with open(params['data'], 'rb') as f:
+    os.makedirs(args.output_path, exist_ok=True)
+    output_path = args.output_path
+    output_tag = args.output_tag
+    with open(args.data, 'rb') as f:
         env = dill.load(f, encoding='latin1')
 
-    eval_stg, hyperparams = load_model(params['model'], env, ts=params['checkpoint'])
+    eval_stg, hyperparams = load_model(args.model, env, ts=args.checkpoint)
 
     if 'override_attention_radius' in hyperparams:
         for attention_radius_override in hyperparams['override_attention_radius']:
@@ -113,9 +123,9 @@ if __name__ == "__main__":
 
             print(np.mean(eval_fde_batch_errors))
             pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'ml'}
-                         ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_ade_most_likely_z.csv'))
+                         ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_ade_most_likely_z.csv'))
             pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'ml'}
-                         ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_fde_most_likely_z.csv'))
+                         ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_fde_most_likely_z.csv'))
 
 
             ############### FULL ###############
@@ -171,10 +181,10 @@ if __name__ == "__main__":
                 eval_kde_nll = np.hstack((eval_kde_nll, batch_error_dict[params['node_type']]['kde']))
 
         pd.DataFrame({'value': eval_ade_batch_errors, 'metric': 'ade', 'type': 'full'}
-                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_ade_full.csv'))
+                     ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_ade_full.csv'))
         pd.DataFrame({'value': eval_fde_batch_errors, 'metric': 'fde', 'type': 'full'}
-                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_fde_full.csv'))
+                     ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_fde_full.csv'))
         pd.DataFrame({'value': eval_kde_nll, 'metric': 'kde', 'type': 'full'}
-                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_kde_full.csv'))
+                     ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_kde_full.csv'))
         pd.DataFrame({'value': eval_road_viols, 'metric': 'road_viols', 'type': 'full'}
-                     ).to_csv(os.path.join(params['output_path'], params['output_tag'] + "_" + str(ph) + '_rv_full.csv'))
+                     ).to_csv(os.path.join(output_path, output_tag + "_" + str(ph) + '_rv_full.csv'))

@@ -1,8 +1,8 @@
-dataset_name: 'meat_square3_2021-07-19-17-14-43_2'
+dataset_name: 'stone_flower_add_2021-08-20-11-33-48_4'
 preprocessed_data_dir: 'processed_centerpoint_out_new_no_minus_50_dur_180s'
 save_dir: 'visualizations'
 model_name: 'my_int_ee_new'
-num_samples: 100
+num_samples: 1
 scene_idx: 0
 ph: 6
 max_h: 4

@@ -55,6 +55,8 @@ def main(params):
     ph = params['ph']
     max_h = params['max_h']
     num_samples = params['num_samples']
+    z_mode = True
+    gmm_mode = True
 
     CAR_IMAGES = (plt.imread('icons/Car TOP_VIEW 375397.png'),  # blue
                   plt.imread('icons/Car TOP_VIEW F05F78.png'),  # red
@@ -77,6 +79,10 @@ def main(params):
 
     #
     save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir'].split('processed_')[-1]}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
+    if z_mode:
+        save_dir += '_Z'
+    if gmm_mode:
+        save_dir += '_GMM'
     os.makedirs(f"{save_dir}/bev_maps", exist_ok=True)
 
     scene = eval_scenes[scene_idx]
@@ -88,6 +94,11 @@ def main(params):
 
     my_patch = (center[0] - width / 2, center[1] - height / 2,
                 center[0] + width / 2, center[1] + height / 2)
+
+    vis_alpha = 0.1
+    if num_samples == 1:
+        vis_alpha = 0.5
+
     node_id2agent_id = dict()
     for t in range(1, scene.timesteps - 1):
         timesteps = np.array([t])
@@ -96,8 +107,8 @@ def main(params):
                                            timesteps,
                                            ph,
                                            num_samples=num_samples,
-                                           z_mode=False,
-                                           gmm_mode=False,
+                                           z_mode=z_mode,
+                                           gmm_mode=gmm_mode,
                                            full_dist=False)
 
         prediction_dict, histories_dict, futures_dict = \
@@ -146,7 +157,7 @@ def main(params):
             for i, row in enumerate(player_predict[0]):
                 ax.plot(row[:, 0], row[:, 1],
                         marker='o', color=agent_color,
-                        linewidth=1, alpha=0.1, markersize=4)
+                        linewidth=1, alpha=vis_alpha, markersize=4)
 
             ax.plot(player_future[:, 0],
                     player_future[:, 1],
@@ -191,7 +202,7 @@ def main(params):
             for i, row in enumerate(player_predict[0]):
                 ax.plot(row[:, 0], row[:, 1],
                         marker='o', color=agent_color,
-                        linewidth=1, alpha=0.1, markersize=4)
+                        linewidth=1, alpha=vis_alpha, markersize=4)
 
             ax.plot(player_future[:, 0], player_future[:, 1],
                     marker='s', color=agent_color, alpha=0.6,

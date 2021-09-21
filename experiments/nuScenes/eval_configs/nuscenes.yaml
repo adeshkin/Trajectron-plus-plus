@@ -1,7 +1,2 @@
-model: 'models/int_ee'
-checkpoint: 12
-data: '/media/cds-k/data/nuScenes/traj++_processed_data/processed_boris/nuScenes_test_full.pkl'
-output_path: '/media/cds-k/data/nuScenes/traj++_results/boris_int_ee_12'
-output_tag: 'boris_int_ee_12'
-node_type: 'VEHICLE'
+node_type: 'PEDESTRIAN'
 prediction_horizon: [2, 4, 6, 8]
