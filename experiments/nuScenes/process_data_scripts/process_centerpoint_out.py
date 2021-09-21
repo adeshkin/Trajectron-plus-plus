@@ -282,8 +282,9 @@ def process_scene(scene, env):
                                  'width',
                                  'height',
                                  'heading'])
-    label2category = {0: env.NodeType.VEHICLE,
-                      1: env.NodeType.PEDESTRIAN}
+    label2category = {0.0: env.NodeType.VEHICLE,
+                      1.0: env.NodeType.PEDESTRIAN,
+                      2.0: env.NodeType.PEDESTRIAN}  # CYCLIST
 
     for agent in scene['agents'].values():
         agent_id = agent['id']
@@ -474,7 +475,7 @@ def process_data(data_dir, filename, output_path):
         'dataloader': {
             'in_time_res_sec': 0.1,
             'out_time_res_sec': 0.5,
-            'score_threshold': 0.05,
+            'score_threshold': 0.2,
             'scene_duration_sec': 20,
         }
     }

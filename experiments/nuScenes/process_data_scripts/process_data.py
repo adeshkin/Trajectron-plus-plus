@@ -16,7 +16,7 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from nuscenes.utils.splits import create_splits_scenes
 from environment import Environment, Scene, Node, GeometricMap
-from environment import derivative_of_old as derivative_of
+from environment import derivative_of_new as derivative_of
 #from environment import derivative_of
 scene_blacklist = [499, 515, 517]
 
@@ -335,7 +335,8 @@ def process_scene(ns_scene, env, nusc, data_path):
             vx = derivative_of(x, scene.dt)
             vy = derivative_of(y, scene.dt)
             velocity = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1)
-
+            '''
+            print('KalmanFilter')
             filter_veh = NonlinearKinematicBicycle(dt=scene.dt, sMeasurement=1.0)
             P_matrix = None
             for i in range(len(x)):
@@ -366,7 +367,7 @@ def process_scene(ns_scene, env, nusc, data_path):
                         z_new=z_new
                     )
                     P_matrix = P_matrix_new
-
+            '''
             curvature, pl, _ = trajectory_curvature(np.stack((x, y), axis=-1))
             if pl < 1.0:  # vehicle is "not" moving
                 x = x[0].repeat(max_timesteps + 1)
@@ -456,7 +457,7 @@ def process_data(data_path, version, output_path, val_split):
         val_scene_names = splits['mini_val']
         data_classes = ['train', 'val']
     '''
-    data_classes = ['val']
+    data_classes = ['train', 'val', 'test']
     ns_scene_names = dict()
     ns_scene_names['train'] = train_scene_names
     ns_scene_names['val'] = val_scene_names
