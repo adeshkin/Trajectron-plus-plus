@@ -241,6 +241,33 @@ class MessagesToScenes:
         return self.scenes
 
 
+def get_correct_ids(yaws, len_timesteps=11):
+    start_no_nan = -1
+    count = 0
+    end_no_nan = -1
+    no_nan_ids = []
+    for frame_id, yaw in enumerate(yaws):
+        if not np.isnan(yaw) and count == 0:
+            start_no_nan = frame_id
+            count += 1
+        elif not np.isnan(yaw):
+            count += 1
+
+        if np.isnan(yaw) or frame_id == len(yaws) - 1:
+            if np.isnan(yaw):
+                end_no_nan = frame_id - 1
+
+            elif frame_id == len(yaws) - 1:
+                end_no_nan = frame_id
+
+            if count >= len_timesteps:
+                no_nan_ids.append((start_no_nan, end_no_nan))
+
+            count = 0
+
+    return no_nan_ids
+
+
 def trajectory_curvature(t):
     path_distance = np.linalg.norm(t[-1] - t[0])
 
@@ -282,15 +309,16 @@ def process_scene(scene, env):
                                  'width',
                                  'height',
                                  'heading'])
-    label2category = {0.0: env.NodeType.VEHICLE,
-                      1.0: env.NodeType.PEDESTRIAN,
-                      2.0: env.NodeType.PEDESTRIAN}  # CYCLIST
+    label2category = {0: env.NodeType.VEHICLE,
+                      1: env.NodeType.PEDESTRIAN,
+                      2: env.NodeType.PEDESTRIAN}  # CYCLIST
 
     for agent in scene['agents'].values():
         agent_id = agent['id']
         label = agent['label']
 
         if label not in label2category:
+            print(label)
             continue
 
         size = agent['size']
@@ -299,36 +327,26 @@ def process_scene(scene, env):
         node_id = str(agent_id + 1)
         our_category = label2category[label]
 
-        not_nan_idxs = [i for i, elem in enumerate(np.isnan(yaws)[:-1]) if elem == False and np.isnan(yaws)[i + 1] == False]
+        #  not_nan_idxs = [i for i, elem in enumerate(np.isnan(yaws)[:-1]) if elem == False and np.isnan(yaws)[i + 1] == False]
+        no_nan_ids = get_correct_ids(yaws)
 
-        if len(not_nan_idxs) == 0:
+        if len(no_nan_ids) == 0:
             continue
 
-        for frame_id in not_nan_idxs:
-            data_point = pd.Series({'frame_id': frame_id,
-                                    'type': our_category,
-                                    'node_id': node_id,
-                                    'robot': False,
-                                    'x': traj[frame_id][0],
-                                    'y': traj[frame_id][1],
-                                    'z': 0.0,
-                                    'length': size['x'],
-                                    'width': size['y'],
-                                    'height': size['z'],
-                                    'heading': yaws[frame_id]})
-            data_point_next = pd.Series({'frame_id': frame_id+1,
-                                    'type': our_category,
-                                    'node_id': node_id,
-                                    'robot': False,
-                                    'x': traj[frame_id+1][0],
-                                    'y': traj[frame_id+1][1],
-                                    'z': 0.0,
-                                    'length': size['x'],
-                                    'width': size['y'],
-                                    'height': size['z'],
-                                    'heading': yaws[frame_id+1]})
-            data = data.append(data_point, ignore_index=True)
-            data = data.append(data_point_next, ignore_index=True)
+        for (start_no_nan_id, end_no_nan_id) in no_nan_ids:
+            for frame_id in range(start_no_nan_id, end_no_nan_id+1):
+                data_point = pd.Series({'frame_id': frame_id,
+                                        'type': our_category,
+                                        'node_id': node_id,
+                                        'robot': False,
+                                        'x': traj[frame_id][0],
+                                        'y': traj[frame_id][1],
+                                        'z': 0.0,
+                                        'length': size['x'],
+                                        'width': size['y'],
+                                        'height': size['z'],
+                                        'heading': yaws[frame_id]})
+                data = data.append(data_point, ignore_index=True)
 
     if len(data.index) == 0:
         return None
@@ -475,7 +493,7 @@ def process_data(data_dir, filename, output_path):
         'dataloader': {
             'in_time_res_sec': 0.1,
             'out_time_res_sec': 0.5,
-            'score_threshold': 0.2,
+            'score_threshold': 0,
             'scene_duration_sec': 20,
         }
     }
