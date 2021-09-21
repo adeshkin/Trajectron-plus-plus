@@ -93,11 +93,12 @@ def main(params):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
-                                           timesteps, ph, num_samples=num_samples,
+                                           timesteps,
+                                           ph,
+                                           num_samples=num_samples,
                                            z_mode=False,
                                            gmm_mode=False,
-                                           full_dist=True,
-                                           all_z_sep=False)
+                                           full_dist=False)
 
         prediction_dict, histories_dict, futures_dict = \
             prediction_output_to_trajectories(predictions, dt=scene.dt, max_h=max_h, ph=ph, map=None)
