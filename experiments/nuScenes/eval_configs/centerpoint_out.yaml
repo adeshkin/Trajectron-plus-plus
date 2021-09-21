@@ -1,0 +1,2 @@
+node_type: 'PEDESTRIAN'
+prediction_horizon: [2, 4, 6, 8, 10]

@@ -135,10 +135,14 @@ class Trajectron(object):
                 num_samples=1,
                 min_future_timesteps=0,
                 min_history_timesteps=1,
+                max_ht=None,
                 z_mode=False,
                 gmm_mode=False,
                 full_dist=True,
                 all_z_sep=False):
+
+        if max_ht:
+            self.max_ht = max_ht
 
         predictions_dict = {}
         for node_type in self.env.NodeType:
