@@ -197,8 +197,11 @@ def main(params):
                     marker='d', color=agent_color, alpha=0.3,
                     linewidth=1, markersize=8, markerfacecolor='none')
 
-        # ax.set_title(f'waymo_val_scene_{scene_idx}_ph_{ph}')
-        plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png")
+        plt.grid()
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        plt.title(f"dataset: {params['dataset_name']}\nmodel: {model_name}\nscene: {scene_idx}\nph:{ph}")
+        plt.savefig(f"{save_dir}/bev_maps/{t:02d}.png", bbox_inches='tight')
         fig.clf()
         plt.close()
         del player_future, player_past, player_predict, veh_box, predictions
@@ -208,7 +211,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    config_filename = 'nuscenes'
+    config_filename = 'centerpoint_out'
     with open(f'inference_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
     main(params)
