@@ -67,8 +67,9 @@ if __name__ == "__main__":
     with open(f'eval_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
 
-    os.makedirs(args.output_path, exist_ok=True)
-    output_path = args.output_path
+    output_path = args.output_path.split('.pkl')[0]
+    os.makedirs(output_path, exist_ok=True)
+
     output_tag = args.output_tag
     with open(args.data, 'rb') as f:
         env = dill.load(f, encoding='latin1')
