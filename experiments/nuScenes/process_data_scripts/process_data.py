@@ -473,7 +473,7 @@ def process_data(data_path, version, output_path, val_split):
         #attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
 
         env.attention_radius = attention_radius
-        env.robot_type = env.NodeType.VEHICLE
+        #env.robot_type = env.NodeType.VEHICLE
         scenes = []
 
         for ns_scene_name in tqdm(ns_scene_names[data_class]):
