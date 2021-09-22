@@ -330,6 +330,7 @@ def process_scene(ns_scene, env, nusc, data_path):
         x = node_values[:, 0]
         y = node_values[:, 1]
         heading = node_df['heading'].values
+
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and not node_id == 'ego':
             # Kalman filter Agent
             vx = derivative_of(x, scene.dt)
@@ -464,16 +465,15 @@ def process_data(data_path, version, output_path, val_split):
     ns_scene_names['test'] = test_scene_names
 
     for data_class in data_classes:
-        #env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
-        env = Environment(node_type_list=['PEDESTRIAN'], standardization=standardization)
+        env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
         attention_radius = dict()
         attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
-        #attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
-        #attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
-        #attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+        attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+        attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
 
         env.attention_radius = attention_radius
-        #env.robot_type = env.NodeType.VEHICLE
+        env.robot_type = env.NodeType.VEHICLE
         scenes = []
 
         for ns_scene_name in tqdm(ns_scene_names[data_class]):
