@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-for model in 'models/vel_ee_old' 'models/int_ee_old' 'models/my_int_ee' 'models/my_int_ee_new' 'models/my_int_ee_old'
+for model in 'models/vel_ee_old' 'models/int_ee_old' 'models/my_int_ee_old' 'models/my_int_ee' 'models/my_int_ee_new'
 do
     data_dir=/media/cds-k/data/nuScenes/traj++_processed_data/processed_boris/nuScenes_test_full.pkl
 

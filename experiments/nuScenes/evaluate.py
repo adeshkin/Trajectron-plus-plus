@@ -104,7 +104,7 @@ if __name__ == "__main__":
                                                timesteps,
                                                ph,
                                                num_samples=1,
-                                               min_future_timesteps=8,
+                                               min_future_timesteps=10,
                                                z_mode=True,
                                                gmm_mode=True,
                                                full_dist=False)  # This will trigger grid sampling
@@ -140,7 +140,7 @@ if __name__ == "__main__":
                                                timesteps,
                                                ph,
                                                num_samples=2000,
-                                               min_future_timesteps=8,
+                                               min_future_timesteps=10,
                                                z_mode=False,
                                                gmm_mode=False,
                                                full_dist=False)

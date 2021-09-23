@@ -9,7 +9,7 @@ do
     python process_centerpoint_out.py \
       --data_dir=$data_dir \
       --filename=$filename \
-      --output_path=/media/cds-k/data/nuScenes/traj++_processed_data/processed_centerpoint_out_new_no_minus_50_dur_180s
+      --output_path=/media/cds-k/data/nuScenes/traj++_processed_data/processed_centerpoint_out_no_minus_50_dur_180s
   fi
 done
 
