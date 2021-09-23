@@ -64,7 +64,9 @@ def main(params):
                   plt.imread('icons/Car TOP_VIEW ABCB51.png'),  # green
                   plt.imread('icons/Car TOP_VIEW C8B0B0.png'))  # gray
     COLORS = ('blue', 'red', 'cyan', 'green', 'gray')
+    COLORS_ped = ('b', 'g', 'r', 'c', 'm', 'y', 'w')
     NCOLORS = len(COLORS)
+    NCOLORS_ped = len(COLORS_ped)
 
     # Load dataset
     with open(preprocessed_data_fn, 'rb') as f:
@@ -143,7 +145,7 @@ def main(params):
             else:
                 agent_id = int(node_id)
 
-            agent_color = COLORS[agent_id % NCOLORS]
+            agent_color = COLORS_ped[agent_id % NCOLORS_ped]
 
             # Current Node Position
             circle = plt.Circle((player_past[-1, 0], player_past[-1, 1]),
@@ -167,7 +169,7 @@ def main(params):
 
             ax.plot(player_past[:, 0],
                     player_past[:, 1],
-                    'g--',
+                    'k--',
                     zorder=650,
                     path_effects=[pe.Stroke(linewidth=edge_width, foreground='k'), pe.Normal()])
 
