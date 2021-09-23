@@ -333,6 +333,7 @@ def process_scene(ns_scene, env, nusc, data_path):
 
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE and not node_id == 'ego':
             # Kalman filter Agent
+            '''
             vx = derivative_of(x, scene.dt)
             vy = derivative_of(y, scene.dt)
             velocity = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1)
@@ -368,7 +369,7 @@ def process_scene(ns_scene, env, nusc, data_path):
                         z_new=z_new
                     )
                     P_matrix = P_matrix_new
-
+            '''
             curvature, pl, _ = trajectory_curvature(np.stack((x, y), axis=-1))
             if pl < 1.0:  # vehicle is "not" moving
                 x = x[0].repeat(max_timesteps + 1)
@@ -442,22 +443,6 @@ def process_data(data_path, version, output_path, val_split):
     train_scene_names = splits['train' if 'mini' not in version else 'mini_train']
     val_scene_names = val_scenes
     test_scene_names = splits['val' if 'mini' not in version else 'mini_val']
-    '''
-    train_scene_names = []
-    val_scene_names = []
-    test_scene_names = []
-    if version == "v1.0-trainval":
-        train_scene_names = splits['train']
-        val_scene_names = splits['val']
-        data_classes = ['train', 'val']
-    elif version == "v1.0-test":
-        test_scene_names = splits['test']
-        data_classes = ['test']
-    elif version == "v1.0-mini":
-        train_scene_names = splits['mini_train']
-        val_scene_names = splits['mini_val']
-        data_classes = ['train', 'val']
-    '''
     data_classes = ['train', 'val', 'test']
     ns_scene_names = dict()
     ns_scene_names['train'] = train_scene_names
