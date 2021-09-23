@@ -64,7 +64,16 @@ def main(params):
                   plt.imread('icons/Car TOP_VIEW ABCB51.png'),  # green
                   plt.imread('icons/Car TOP_VIEW C8B0B0.png'))  # gray
     COLORS = ('blue', 'red', 'cyan', 'green', 'gray')
-    COLORS_ped = ('b', 'g', 'r', 'c', 'm', 'y', 'w')
+    COLORS_ped = ('tab:blue',
+                  'tab:orange',
+                  'tab:green',
+                  'tab:red',
+                  'tab:purple',
+                  'tab:brown',
+                  'tab:pink',
+                  'tab:gray',
+                  'tab:olive',
+                  'tab:cyan')
     NCOLORS = len(COLORS)
     NCOLORS_ped = len(COLORS_ped)
 
@@ -163,7 +172,7 @@ def main(params):
 
             ax.plot(player_future[:, 0],
                     player_future[:, 1],
-                    'w--',
+                    'k--',
                     zorder=650,
                     path_effects=[pe.Stroke(linewidth=edge_width, foreground='k'), pe.Normal()])
 
