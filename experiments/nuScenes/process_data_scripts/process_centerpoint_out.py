@@ -16,6 +16,7 @@ sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of as derivative_of
+from process_data import augment_scene, augment
 
 FREQUENCY = 2
 dt = 1 / FREQUENCY
@@ -104,7 +105,7 @@ def downsample_scenes(scenes_list: list,
 
     for scene_id, scene in enumerate(scenes_list):
 
-        assert scene_id == scene['scene_id']
+        # assert scene_id == scene['scene_id']
 
         for agent_id, agent in scene['agents'].items():
             traj_ds = agent['trajectory'][::step_size]
@@ -362,7 +363,7 @@ def process_scene(scene, env):
     data['x'] = data['x'] - x_min
     data['y'] = data['y'] - y_min
 
-    scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
+    scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id), aug_func=augment)
     ###
     scene.x_min = x_min
     scene.y_min = y_min
@@ -524,7 +525,14 @@ def process_data(data_dir, mode, output_path):
     traj_scenes = []
     for scene in all_scenes_list:
         traj_scene = process_scene(scene, env)
-        traj_scenes.append(traj_scene)
+
+        if traj_scene is not None:
+            if mode == 'train':
+                traj_scene.augmented = list()
+                angles = np.arange(0, 360, 15)
+                for angle in angles:
+                    traj_scene.augmented.append(augment_scene(traj_scene, angle))
+            traj_scenes.append(traj_scene)
 
     print(f'Processed {len(traj_scenes):.2f} scenes')
 
