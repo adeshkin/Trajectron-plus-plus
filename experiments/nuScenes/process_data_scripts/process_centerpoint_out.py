@@ -17,7 +17,6 @@ sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of as derivative_of
 
-
 FREQUENCY = 2
 dt = 1 / FREQUENCY
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
@@ -89,7 +88,6 @@ def load_msgs_as_list(yaml_file_path: str) -> list:
 def downsample_scenes(scenes_list: list,
                       input_dt: float = 0.1,
                       output_dt: float = 0.5) -> list:
-
     """
     10 Hz data frequency mey be redundent for the motion prediction task.
     Function used to downsampling with frequency `1 / output_dt`.
@@ -204,12 +202,12 @@ class MessagesToScenes:
                 continue
         return scene
 
-    def create_scenes(self, lidar_msgs_list: list) -> list:
+    def create_scenes(self, start_scene_id, lidar_msgs_list: list) -> list:
 
         """ Main function that create list of scenes. """
 
         n_ts = 0  # number of time step within scene
-        scene_id = 0
+        scene_id = start_scene_id
 
         for msg in tqdm(lidar_msgs_list):
 
@@ -334,7 +332,7 @@ def process_scene(scene, env):
             continue
 
         for (start_no_nan_id, end_no_nan_id) in no_nan_ids:
-            for frame_id in range(start_no_nan_id, end_no_nan_id+1):
+            for frame_id in range(start_no_nan_id, end_no_nan_id + 1):
                 data_point = pd.Series({'frame_id': frame_id,
                                         'type': our_category,
                                         'node_id': node_id,
@@ -486,7 +484,7 @@ def process_scene(scene, env):
     return scene
 
 
-def process_data(data_dir, filename, output_path):
+def process_data(data_dir, mode, output_path):
     os.makedirs(output_path, exist_ok=True)
 
     cfg = {
@@ -494,19 +492,25 @@ def process_data(data_dir, filename, output_path):
             'in_time_res_sec': 0.1,
             'out_time_res_sec': 0.5,
             'score_threshold': 0,
-            'scene_duration_sec': 180,
+            'scene_duration_sec': 20,
         }
     }
+    filenames = [x for x in os.listdir(f'{data_dir}/{mode}') if '.yaml' in x]
 
-    msgs = load_msgs_as_list(f'{data_dir}/{filename}')
-    scenes = MessagesToScenes(time_step=cfg['dataloader']['in_time_res_sec'],
-                              scene_duration_sec=cfg['dataloader']['scene_duration_sec'],
-                              score_threshold=cfg['dataloader']['score_threshold'])
+    all_scenes_list = []
+    start_scene_id = 1000
+    for filename in filenames:
+        msgs = load_msgs_as_list(f'{data_dir}/{mode}/{filename}')
+        scenes = MessagesToScenes(time_step=cfg['dataloader']['in_time_res_sec'],
+                                  scene_duration_sec=cfg['dataloader']['scene_duration_sec'],
+                                  score_threshold=cfg['dataloader']['score_threshold'])
 
-    scenes_list = scenes.create_scenes(msgs)
-    ds_scenes_list = downsample_scenes(scenes_list,
-                                       input_dt=cfg['dataloader']['in_time_res_sec'],
-                                       output_dt=cfg['dataloader']['out_time_res_sec'])
+        scenes_list = scenes.create_scenes(start_scene_id, msgs)
+        start_scene_id += 1000
+        ds_scenes_list = downsample_scenes(scenes_list,
+                                           input_dt=cfg['dataloader']['in_time_res_sec'],
+                                           output_dt=cfg['dataloader']['out_time_res_sec'])
+        all_scenes_list.extend(ds_scenes_list)
 
     env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
     attention_radius = dict()
@@ -518,7 +522,7 @@ def process_data(data_dir, filename, output_path):
     env.attention_radius = attention_radius
 
     traj_scenes = []
-    for scene in ds_scenes_list:
+    for scene in all_scenes_list:
         traj_scene = process_scene(scene, env)
         traj_scenes.append(traj_scene)
 
@@ -527,8 +531,8 @@ def process_data(data_dir, filename, output_path):
     env.scenes = traj_scenes
 
     if len(traj_scenes) > 0:
-        filename = filename.split('.yaml')[0]
-        data_dict_path = os.path.join(output_path, f'{filename}.pkl')
+        #filename = filename.split('.yaml')[0]
+        data_dict_path = os.path.join(output_path, f'centerpoint_out_{mode}.pkl')
         with open(data_dict_path, 'wb') as f:
             dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
         print('Saved Environment!')
@@ -547,7 +551,7 @@ def process_data(data_dir, filename, output_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, required=True)
-    parser.add_argument('--filename', type=str, required=True)
+    parser.add_argument('--mode', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     args = parser.parse_args()
-    process_data(args.data_dir, args.filename, args.output_path)
+    process_data(args.data_dir, args.mode, args.output_path)
