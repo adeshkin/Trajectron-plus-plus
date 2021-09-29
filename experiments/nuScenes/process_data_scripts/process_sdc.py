@@ -410,7 +410,7 @@ def process_data(data_path, version, output_path):
 
     scenes = []
     if version == 'train':
-        num_scenes = 2000
+        num_scenes = 20000
     elif version == 'validation':
         num_scenes = 200
 
@@ -440,11 +440,11 @@ def process_data(data_path, version, output_path):
 
 
 if __name__ == '__main__':
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('--data', type=str, required=True)
-    #parser.add_argument('--version', type=str, required=True)
-    #parser.add_argument('--output_path', type=str, required=True)
-    #args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data', type=str, required=True)
+    parser.add_argument('--version', type=str, required=True)
+    parser.add_argument('--output_path', type=str, required=True)
+    args = parser.parse_args()
     
-    #process_data(args.data, args.version, args.output_path)
-    process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')
+    process_data(args.data, args.version, args.output_path)
+    #process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')

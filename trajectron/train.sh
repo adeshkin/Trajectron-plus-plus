@@ -3,7 +3,7 @@
 python train.py \
 --eval_every 1 \
 --vis_every 1 \
---conf ../experiments/nuScenes/models/int_ee_old/config_ph_25_maxhl_25_minhl_2.json \
+--conf ../experiments/nuScenes/models/int_ee_old/config_ph_25_maxhl_25_minhl_24.json \
 --data_dir /media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc \
 --train_data_dict sdc_train.pkl \
 --eval_data_dict sdc_validation.pkl \
