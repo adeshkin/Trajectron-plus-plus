@@ -1,9 +1,9 @@
 #!/bin/bash
 
-for mode in 'train' 'val' 'test'
+for mode in 'train' 'validation'
 do
   python process_sdc.py \
     --data=/home/adeshkin/Desktop/sdc_data \
-    --version="validation" \
+    --version=$mode \
     --output_path=../../processed_sdc
 done
