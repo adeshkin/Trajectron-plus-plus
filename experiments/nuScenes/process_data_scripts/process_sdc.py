@@ -409,12 +409,13 @@ def process_data(data_path, version, output_path):
     env.attention_radius = attention_radius
 
     scenes = []
-    if version == 'train':
-        num_scenes = 20000
-    elif version == 'validation':
-        num_scenes = 200
+    #if version == 'train':
+    #    num_scenes = 20000
+    #elif version == 'validation':
+    #    num_scenes = 200
 
-    sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
+    # sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
+    sdc_scenes = scenes_generator(filepaths)
     for sdc_scene in tqdm(sdc_scenes):
         scene = process_scene(sdc_scene, env)
         scenes.append(scene)
