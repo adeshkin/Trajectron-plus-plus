@@ -3,7 +3,7 @@
 python train.py \
 --eval_every 1 \
 --vis_every 1 \
---conf ../experiments/nuScenes/models/int_ee_old/config_ph_25_maxhl_25.json \
+--conf ../experiments/nuScenes/models/int_ee_old/config_ph_25_maxhl_25_minhl_25.json \
 --data_dir /media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc \
 --train_data_dict sdc_train.pkl \
 --eval_data_dict sdc_validation.pkl \
@@ -13,5 +13,5 @@ python train.py \
 --log_dir ../experiments/nuScenes/models \
 --train_epochs 20 \
 --node_freq_mult_train \
---log_tag _int_ee_sdc_ph_25_maxhl_25 \
+--log_tag _int_ee_sdc_ph_25_maxhl_25_min_hl_25 \
 --augment
