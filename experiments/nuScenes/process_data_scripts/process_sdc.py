@@ -423,7 +423,7 @@ def process_data(data_path, version, output_path):
 
     env.scenes = scenes
     if len(scenes) > 0:
-        data_dict_path = os.path.join(output_path, f'sdc_{version}_{dt}_pr.pkl')
+        data_dict_path = os.path.join(output_path, f'sdc_{version}.pkl')
         with open(data_dict_path, 'wb') as f:
             dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
         print('Saved Environment!')

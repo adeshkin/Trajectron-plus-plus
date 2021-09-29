@@ -3,7 +3,7 @@
 for mode in 'train' 'validation'
 do
   python process_sdc.py \
-    --data=/home/adeshkin/Desktop/sdc_data \
+    --data=/media/cds-k/Data_2/canonical-trn-dev-data/data \
     --version=$mode \
-    --output_path=../../processed_sdc
+    --output_path=/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc
 done
