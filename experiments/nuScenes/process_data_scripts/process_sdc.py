@@ -410,9 +410,9 @@ def process_data(data_path, version, output_path):
 
     scenes = []
     if version == 'train':
-        num_scenes = 10000
+        num_scenes = 2000
     elif version == 'validation':
-        num_scenes = 100
+        num_scenes = 200
 
     sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
     for sdc_scene in tqdm(sdc_scenes):
