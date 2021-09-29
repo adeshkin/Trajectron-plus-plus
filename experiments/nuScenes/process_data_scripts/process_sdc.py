@@ -409,7 +409,12 @@ def process_data(data_path, version, output_path):
     env.attention_radius = attention_radius
 
     scenes = []
-    sdc_scenes = itertools.islice(scenes_generator(filepaths), 10)
+    if version == 'train':
+        num_scenes = 10000
+    elif version == 'validation':
+        num_scenes = 1000
+
+    sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
     for sdc_scene in tqdm(sdc_scenes):
         scene = process_scene(sdc_scene, env)
         scenes.append(scene)
@@ -418,7 +423,7 @@ def process_data(data_path, version, output_path):
 
     env.scenes = scenes
     if len(scenes) > 0:
-        data_dict_path = os.path.join(output_path, f'sdc_{version}_old_dt_{dt}_pr.pkl')
+        data_dict_path = os.path.join(output_path, f'sdc_{version}_{dt}_pr.pkl')
         with open(data_dict_path, 'wb') as f:
             dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
         print('Saved Environment!')
