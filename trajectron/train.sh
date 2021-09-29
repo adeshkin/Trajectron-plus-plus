@@ -11,7 +11,7 @@ python train.py \
 --preprocess_workers 10 \
 --batch_size 256 \
 --log_dir ../experiments/nuScenes/models \
---train_epochs 20 \
+--train_epochs 40 \
 --node_freq_mult_train \
 --log_tag _int_ee_centerpoint_out_ph_10_maxhl_4 \
 --augment

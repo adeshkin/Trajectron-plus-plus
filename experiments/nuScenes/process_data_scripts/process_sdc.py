@@ -1,3 +1,4 @@
+import random
 import sys
 import os
 import dill
@@ -5,7 +6,6 @@ import argparse
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import tensorflow as tf
 import itertools
 
 from kalman_filter import NonlinearKinematicBicycle
@@ -17,7 +17,7 @@ from ysdc_dataset_api.utils import get_file_paths, scenes_generator
 #sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
-from environment import derivative_of_old as derivative_of
+from environment import derivative_of_new as derivative_of
 #from environment import derivative_of
 
 #FREQUENCY = 2
@@ -177,10 +177,10 @@ def process_scene(sdc_scene, env):
     
     center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
     
-    x_min = np.round(data['x'].min() - 50)
-    x_max = np.round(data['x'].max() + 50)
-    y_min = np.round(data['y'].min() - 50)
-    y_max = np.round(data['y'].max() + 50)
+    x_min = np.round(data['x'].min())
+    x_max = np.round(data['x'].max())
+    y_min = np.round(data['y'].min())
+    y_max = np.round(data['y'].max())
 
     data['x'] = data['x'] - x_min
     data['y'] = data['y'] - y_min
@@ -310,6 +310,7 @@ def process_data(data_path, version, output_path):
     
     dataset_path = f'{data_path}/{version}_pb/'
     filepaths = get_file_paths(dataset_path)
+    random.shuffle(filepaths)
 
     env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
     attention_radius = dict()
