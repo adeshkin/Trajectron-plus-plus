@@ -86,7 +86,7 @@ def main(params):
     log_dir = './models'
     model_name = params['model_name']
     model_dir = os.path.join(log_dir, model_name)
-    eval_stg, hyp = load_model(model_dir, eval_env, ts=12)
+    eval_stg, hyp = load_model(model_dir, eval_env, ts=10)
 
     #
     save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir'].split('processed_')[-1]}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
@@ -237,7 +237,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    config_filename = 'centerpoint_out'
+    config_filename = 'sdc'
     with open(f'inference_configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
     main(params)

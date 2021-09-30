@@ -1,8 +1,8 @@
-dataset_name: 'sdc'
-preprocessed_data_fn: '../processed_sdc/sdc_validation_old_dt_0.6_pr.pkl'
-save_dir: 'visualizations/sdc_validation_old_dt_0.6_pr'
-model_name: 'int_ee' # int_ee int_ee_me robot vel_ee
-num_samples: 100
-scene_idx: 2
-ph: 6
-max_h: 10
+dataset_name: 'sdc_validation'
+preprocessed_data_dir: 'processed_sdc'
+save_dir: 'visualizations/sdc_validation'
+model_name: 'models_29_Sep_2021_22_41_25_int_ee_sdc_ph_25_maxhl_25_min_hl_24' # int_ee int_ee_me robot vel_ee
+num_samples: 1
+scene_idx: 0
+ph: 25
+max_h: 25
