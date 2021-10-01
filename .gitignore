@@ -8,6 +8,7 @@ visualizations/
 videos/
 models/
 results/
+processed_data/
 processed_old/
 processed_new/
 processed_boris/

@@ -31,7 +31,9 @@ else:
 
     args.device = torch.device(args.device)
 
-if args.eval_device is None:
+if args.eval_device is None and torch.cuda.is_available():
+    args.eval_device = torch.device('cuda:0')
+elif args.eval_device is None:
     args.eval_device = torch.device('cpu')
 
 # This is needed for memory pinning using a DataLoader (otherwise memory is pinned to cuda:0 by default)
