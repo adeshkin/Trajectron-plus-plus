@@ -111,13 +111,14 @@ def main(params):
         vis_alpha = 0.5
 
     node_id2agent_id = dict()
-    for t in range(1, scene.timesteps - 1):
+    for t in range(24, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
                                            timesteps,
                                            ph,
-                                           min_history_timesteps=24,
+                                           min_future_timesteps=25,
+                                           min_history_timesteps=10,
                                            num_samples=num_samples,
                                            z_mode=z_mode,
                                            gmm_mode=gmm_mode,

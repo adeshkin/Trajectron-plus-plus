@@ -70,7 +70,7 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         map) = batch
+         map) = batch  # mask
 
         x = x_t.to(self.device)
         y = y_t.to(self.device)
@@ -80,6 +80,16 @@ class Trajectron(object):
             robot_traj_st_t = robot_traj_st_t.to(self.device)
         if type(map) == torch.Tensor:
             map = map.to(self.device)
+
+        #neighbors = restore(neighbors_data_st)
+        #for key in neighbors:
+        #    n_k = np.array(neighbors[key])
+        #    neighbors[key] = n_k.tolist()
+
+        #neighbors_edge = restore(neighbors_edge_value)
+        #for key in neighbors_edge:
+        #    n_k = np.array(neighbors_edge[key])[mask]
+        #    neighbors_edge[key] = n_k.tolist()
 
         # Run forward pass
         model = self.node_models_dict[node_type]
