@@ -55,7 +55,7 @@ def main(params):
     ph = params['ph']
     max_h = params['max_h']
     num_samples = params['num_samples']
-    z_mode = False
+    z_mode = True
     gmm_mode = True
 
     CAR_IMAGES = (plt.imread('icons/Car TOP_VIEW 375397.png'),  # blue
