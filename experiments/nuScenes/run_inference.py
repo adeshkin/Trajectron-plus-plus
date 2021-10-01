@@ -117,6 +117,7 @@ def main(params):
             predictions = eval_stg.predict(scene,
                                            timesteps,
                                            ph,
+                                           min_history_timesteps=24,
                                            num_samples=num_samples,
                                            z_mode=z_mode,
                                            gmm_mode=gmm_mode,

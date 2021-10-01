@@ -3,6 +3,6 @@ preprocessed_data_dir: 'processed_sdc'
 save_dir: 'visualizations/sdc_validation'
 model_name: 'models_29_Sep_2021_22_41_25_int_ee_sdc_ph_25_maxhl_25_min_hl_24' # int_ee int_ee_me robot vel_ee
 num_samples: 1
-scene_idx: 0
+scene_idx: 22
 ph: 25
 max_h: 25

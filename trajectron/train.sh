@@ -13,5 +13,4 @@ python train.py \
 --log_dir ../experiments/nuScenes/models \
 --train_epochs 100 \
 --node_freq_mult_train \
---log_tag _int_ee_sdc_ph_25_maxhl_25_min_hl_24 \
---augment
+--log_tag _int_ee_sdc_ph_25_maxhl_25_min_hl_24
