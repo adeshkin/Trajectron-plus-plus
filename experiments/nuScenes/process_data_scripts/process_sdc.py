@@ -10,19 +10,17 @@ import itertools
 
 from kalman_filter import NonlinearKinematicBicycle
 
-#sys.path.append("/home/adeshkin/Desktop/shifts/sdc")
+# sys.path.append("/home/adeshkin/Desktop/shifts/sdc")
 from ysdc_dataset_api.utils import get_file_paths, scenes_generator
 
-#nu_path = '../devkit/python-sdk/'
-#sys.path.append(nu_path)
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of_new as derivative_of
-#from environment import derivative_of
+
 
 FREQUENCY = 5
 dt = 1. / FREQUENCY
-#dt = 0.6
+
 
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
 data_columns_vehicle = data_columns_vehicle.append(pd.MultiIndex.from_tuples([('heading', '°'), ('heading', 'd°')]))
@@ -274,14 +272,14 @@ def process_scene(sdc_scene, env):
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
     ###
-    prediction_request_agent_ids = set(str(pr.track_id) for pr in sdc_scene.prediction_requests)
-    scene.prediction_request_agent_ids = prediction_request_agent_ids
-    scene.x_min = x_min
-    scene.y_min = y_min
-    scene.center_x = center_x
-    scene.center_y = center_y
-    scene.width = width
-    scene.height = height
+    # prediction_request_agent_ids = set(str(pr.track_id) for pr in sdc_scene.prediction_requests)
+    # scene.prediction_request_agent_ids = prediction_request_agent_ids
+    #scene.x_min = x_min
+    #scene.y_min = y_min
+    #scene.center_x = center_x
+    #scene.center_y = center_y
+    #scene.width = width
+    #scene.height = height
     ###
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
@@ -393,51 +391,53 @@ def process_scene(sdc_scene, env):
 
 
 def process_data(data_path, version, output_path):
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(f'{output_path}/{version}', exist_ok=True)
     
     dataset_path = f'{data_path}/{version}_pb/'
     filepaths = get_file_paths(dataset_path)
-    random.shuffle(filepaths)
 
-    env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
-    attention_radius = dict()
-    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
-    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
-    attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
-    attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+    part2filepaths = dict()
+    for filepath in filepaths:
+        part = filepath.split('/')[-2]
+        if part not in part2filepaths:
+            part2filepaths[part] = [filepath]
+        else:
+            part2filepaths[part].append(filepath)
 
-    env.attention_radius = attention_radius
+    for part in part2filepaths:
+        env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
+        attention_radius = dict()
+        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
+        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+        attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+        attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
 
-    scenes = []
-    #if version == 'train':
-    #    num_scenes = 20000
-    #elif version == 'validation':
-    #    num_scenes = 200
+        env.attention_radius = attention_radius
 
-    # sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
-    sdc_scenes = scenes_generator(filepaths)
-    for sdc_scene in tqdm(sdc_scenes):
-        scene = process_scene(sdc_scene, env)
-        scenes.append(scene)
+        scenes = []
+        sdc_scenes = scenes_generator(part2filepaths[part])
+        for sdc_scene in tqdm(sdc_scenes):
+            scene = process_scene(sdc_scene, env)
+            scenes.append(scene)
 
-    print(f'Processed {len(scenes):.2f} scenes')
+        print(f'Processed {len(scenes):.2f} scenes')
 
-    env.scenes = scenes
-    if len(scenes) > 0:
-        data_dict_path = os.path.join(output_path, f'sdc_{version}.pkl')
-        with open(data_dict_path, 'wb') as f:
-            dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
-        print('Saved Environment!')
+        env.scenes = scenes
+        if len(scenes) > 0:
+            data_dict_path = os.path.join(output_path, f'{version}/sdc_{version}_{part}.pkl')
+            with open(data_dict_path, 'wb') as f:
+                dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
+            print('Saved Environment!')
 
-    global total
-    global curv_0_2
-    global curv_0_1
-    print(f"Total Nodes: {total}")
-    print(f"Curvature > 0.1 Nodes: {curv_0_1}")
-    print(f"Curvature > 0.2 Nodes: {curv_0_2}")
-    total = 0
-    curv_0_1 = 0
-    curv_0_2 = 0
+        global total
+        global curv_0_2
+        global curv_0_1
+        print(f"Total Nodes: {total}")
+        print(f"Curvature > 0.1 Nodes: {curv_0_1}")
+        print(f"Curvature > 0.2 Nodes: {curv_0_2}")
+        total = 0
+        curv_0_1 = 0
+        curv_0_2 = 0
 
 
 if __name__ == '__main__':
@@ -448,4 +448,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     process_data(args.data, args.version, args.output_path)
-    #process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')
+    # process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')
