@@ -172,7 +172,7 @@ def process_scene(sdc_scene, env):
     data.sort_values('frame_id', inplace=True)
     max_timesteps = data['frame_id'].max()
     
-    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+    # center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
     
     x_min = np.round(data['x'].min())
     x_max = np.round(data['x'].max())
