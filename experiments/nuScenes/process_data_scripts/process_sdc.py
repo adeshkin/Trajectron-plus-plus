@@ -102,9 +102,9 @@ def get_viewport(x, y):
 
 
 def process_scene(sdc_scene, env):
-    #dt_in = 0.2
-    #dt_out = dt
-    #step = int(dt_out / dt_in)
+    # dt_in = 0.2
+    # dt_out = dt
+    # step = int(dt_out / dt_in)
 
     data = pd.DataFrame(columns=['frame_id',
                                  'type',
@@ -117,10 +117,10 @@ def process_scene(sdc_scene, env):
                                  'heading'])
     scene_id = str(sdc_scene.id)
     scene_tracks = {
-        'past_vehicle': sdc_scene.past_vehicle_tracks,#[::3],
-        'future_vehicle': sdc_scene.future_vehicle_tracks,#[2::3],
-        'past_pedestrian': sdc_scene.past_pedestrian_tracks,#[::3],
-        'future_pedestrian': sdc_scene.future_pedestrian_tracks,#[2::3]
+        'past_vehicle': sdc_scene.past_vehicle_tracks,  # [::3],
+        'future_vehicle': sdc_scene.future_vehicle_tracks,  # [2::3],
+        'past_pedestrian': sdc_scene.past_pedestrian_tracks,  # [::3],
+        'future_pedestrian': sdc_scene.future_pedestrian_tracks,  # [2::3]
     }
 
     for scene_track_name in scene_tracks:
