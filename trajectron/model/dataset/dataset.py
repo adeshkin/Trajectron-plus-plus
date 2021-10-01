@@ -75,4 +75,4 @@ class NodeTypeDataset(data.Dataset):
         node_timestep_data = get_node_timestep_data(self.env, scene, t, node, self.state, self.pred_state,
                                       self.edge_types, self.max_ht, self.max_ft, self.hyperparams)
 
-        return node_timestep_data #, repr(node).split('/')[1] in scene.prediction_request_agent_ids
+        return node_timestep_data  # , repr(node).split('/')[1] in scene.prediction_request_agent_ids

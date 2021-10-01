@@ -2,7 +2,6 @@
 
 python train.py \
 --eval_every 5 \
---vis_every 10 \
 --conf ../experiments/nuScenes/train_configs/config_ph_25_maxhl_24_minhl_24.json \
 --data_dir /media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc \
 --train_data_dict sdc_train.pkl \

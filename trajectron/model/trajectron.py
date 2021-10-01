@@ -72,14 +72,14 @@ class Trajectron(object):
          robot_traj_st_t,
          map) = batch  # mask
 
-        x = x_t.to(self.device)
-        y = y_t.to(self.device)
-        x_st_t = x_st_t.to(self.device)
-        y_st_t = y_st_t.to(self.device)
+        x = x_t.to(self.device) # mask
+        y = y_t.to(self.device) # mask
+        x_st_t = x_st_t.to(self.device) # mask
+        y_st_t = y_st_t.to(self.device) # mask
         if robot_traj_st_t is not None:
             robot_traj_st_t = robot_traj_st_t.to(self.device)
         if type(map) == torch.Tensor:
-            map = map.to(self.device)
+            map = map.to(self.device) # mask
 
         #neighbors = restore(neighbors_data_st)
         #for key in neighbors:
