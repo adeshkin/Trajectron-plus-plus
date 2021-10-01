@@ -186,17 +186,19 @@ class Trajectron(object):
 
             predictions_np = predictions.cpu().detach().numpy()
 
-            mask_agents = np.array([repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
-            if True not in mask_agents:
-                continue
+            if scene.prediction_request_agent_ids:
+                mask_agents = np.array([repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
+                if True not in mask_agents:
+                    continue
 
-            predictions_np_pr = predictions_np[:, mask_agents]
-            timesteps_o_pr = np.array(timesteps_o)[mask_agents]
-            nodes_pr = np.array(nodes)[mask_agents]
+                predictions_np = predictions_np[:, mask_agents]
+                timesteps_o = np.array(timesteps_o)[mask_agents]
+                nodes = np.array(nodes)[mask_agents]
+
             # Assign predictions to node
-            for i, ts in enumerate(timesteps_o_pr):
+            for i, ts in enumerate(timesteps_o):
                 if ts not in predictions_dict.keys():
                     predictions_dict[ts] = dict()
-                predictions_dict[ts][nodes_pr[i]] = np.transpose(predictions_np_pr[:, [i]], (1, 0, 2, 3))
+                predictions_dict[ts][nodes[i]] = np.transpose(predictions_np[:, [i]], (1, 0, 2, 3))
 
         return predictions_dict
