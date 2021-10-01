@@ -55,7 +55,7 @@ def main(params):
     ph = params['ph']
     max_h = params['max_h']
     num_samples = params['num_samples']
-    z_mode = True
+    z_mode = False
     gmm_mode = True
 
     CAR_IMAGES = (plt.imread('icons/Car TOP_VIEW 375397.png'),  # blue
@@ -86,7 +86,7 @@ def main(params):
     log_dir = './models'
     model_name = params['model_name']
     model_dir = os.path.join(log_dir, model_name)
-    eval_stg, hyp = load_model(model_dir, eval_env, ts=10)
+    eval_stg, hyp = load_model(model_dir, eval_env, ts=params['model_epoch'])
 
     #
     save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir'].split('processed_')[-1]}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"
@@ -111,14 +111,14 @@ def main(params):
         vis_alpha = 0.5
 
     node_id2agent_id = dict()
-    for t in range(24, scene.timesteps - 1):
+    for t in range(1, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
                                            timesteps,
                                            ph,
-                                           min_future_timesteps=25,
-                                           min_history_timesteps=10,
+                                           min_future_timesteps=ph,
+                                           min_history_timesteps=params['min_h'],
                                            num_samples=num_samples,
                                            z_mode=z_mode,
                                            gmm_mode=gmm_mode,
