@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import itertools
 
-from kalman_filter import NonlinearKinematicBicycle
+from .kalman_filter import NonlinearKinematicBicycle
 
 # sys.path.append("/home/adeshkin/Desktop/shifts/sdc")
 from ysdc_dataset_api.utils import get_file_paths, scenes_generator

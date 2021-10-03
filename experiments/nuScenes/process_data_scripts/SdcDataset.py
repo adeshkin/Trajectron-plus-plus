@@ -2,11 +2,7 @@ import sys
 import random
 import numpy as np
 import pandas as pd
-from ysdc_dataset_api.proto import Scene as SdcScene
-from ysdc_dataset_api.utils import get_file_paths
 
-from kalman_filter import NonlinearKinematicBicycle
-from process_sdc import trajectory_curvature
 
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
@@ -65,38 +61,6 @@ standardization = {
         }
     }
 }
-
-
-class SdcDataset(object):
-    def __init__(self, data_path, version):
-        dataset_path = f'{data_path}/{version}_pb/'
-        self.filepaths = get_file_paths(dataset_path)
-        if version == 'train':
-            random.shuffle(self.filepaths)
-
-        self.env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
-        attention_radius = dict()
-        attention_radius[(self.env.NodeType.PEDESTRIAN, self.env.NodeType.PEDESTRIAN)] = 10.0
-        attention_radius[(self.env.NodeType.PEDESTRIAN, self.env.NodeType.VEHICLE)] = 20.0
-        attention_radius[(self.env.NodeType.VEHICLE, self.env.NodeType.PEDESTRIAN)] = 20.0
-        attention_radius[(self.env.NodeType.VEHICLE, self.env.NodeType.VEHICLE)] = 30.0
-
-        self.env.attention_radius = attention_radius
-
-    def __len__(self):
-        return len(self.filepaths)
-
-    def __getitem__(self, i):
-        filepath = self.filepaths[i]
-        with open(filepath, 'rb') as f:
-            scene_serialized = f.read()
-        sdc_scene = SdcScene()
-        sdc_scene.ParseFromString(scene_serialized)
-
-        scene = process_scene(sdc_scene, self.env)
-
-
-        return None
 
 
 def process_scene(sdc_scene, env):
@@ -163,8 +127,6 @@ def process_scene(sdc_scene, env):
     data.sort_values('frame_id', inplace=True)
     max_timesteps = data['frame_id'].max()
 
-    # center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
-
     x_min = np.round(data['x'].min())
     x_max = np.round(data['x'].max())
     y_min = np.round(data['y'].min())
@@ -181,66 +143,13 @@ def process_scene(sdc_scene, env):
             continue
 
         if not np.all(np.diff(node_df['frame_id']) == 1):
-            # print('Occlusion')
             continue  # TODO Make better
 
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
         y = node_values[:, 1]
         heading = node_df['heading'].values
-        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
-            # Kalman filter Agenti
-            vx = derivative_of(x, scene.dt)
-            vy = derivative_of(y, scene.dt)
-            velocity = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1)
 
-            filter_veh = NonlinearKinematicBicycle(dt=scene.dt, sMeasurement=1.0)
-            P_matrix = None
-            for i in range(len(x)):
-                if i == 0:  # initalize KF
-                    # initial P_matrix
-                    P_matrix = np.identity(4)
-                elif i < len(x):
-                    # assign new est values
-                    x[i] = x_vec_est_new[0][0]
-                    y[i] = x_vec_est_new[1][0]
-                    heading[i] = x_vec_est_new[2][0]
-                    velocity[i] = x_vec_est_new[3][0]
-
-                if i < len(x) - 1:  # no action on last data
-                    # filtering
-                    x_vec_est = np.array([[x[i]],
-                                          [y[i]],
-                                          [heading[i]],
-                                          [velocity[i]]])
-                    z_new = np.array([[x[i + 1]],
-                                      [y[i + 1]],
-                                      [heading[i + 1]],
-                                      [velocity[i + 1]]])
-                    x_vec_est_new, P_matrix_new = filter_veh.predict_and_update(
-                        x_vec_est=x_vec_est,
-                        u_vec=np.array([[0.], [0.]]),
-                        P_matrix=P_matrix,
-                        z_new=z_new
-                    )
-                    P_matrix = P_matrix_new
-
-            curvature, pl, _ = trajectory_curvature(np.stack((x, y), axis=-1))
-            if pl < 1.0:  # vehicle is "not" moving
-                x = x[0].repeat(max_timesteps + 1)
-                y = y[0].repeat(max_timesteps + 1)
-                heading = heading[0].repeat(max_timesteps + 1)
-            global total
-            global curv_0_2
-            global curv_0_1
-            total += 1
-            if pl > 1.0:
-                if curvature > .2:
-                    curv_0_2 += 1
-                    node_frequency_multiplier = 3 * int(np.floor(total / curv_0_2))
-                elif curvature > .1:
-                    curv_0_1 += 1
-                    node_frequency_multiplier = 3 * int(np.floor(total / curv_0_1))
         vx = derivative_of(x, scene.dt)
         vy = derivative_of(y, scene.dt)
         ax = derivative_of(vx, scene.dt)
