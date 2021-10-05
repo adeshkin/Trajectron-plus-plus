@@ -1,5 +1,4 @@
 import sys
-import random
 import numpy as np
 import pandas as pd
 
@@ -7,15 +6,10 @@ import pandas as pd
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of as derivative_of
-
-
+from model.dataset import get_node_timestep_data
 
 FREQUENCY = 5
 dt = 1. / FREQUENCY
-
-curv_0_2 = 0
-curv_0_1 = 0
-total = 0
 
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
 data_columns_vehicle = data_columns_vehicle.append(pd.MultiIndex.from_tuples([('heading', '°'), ('heading', 'd°')]))
@@ -75,10 +69,10 @@ def process_scene(sdc_scene, env):
                                  'heading'])
     scene_id = str(sdc_scene.id)
     scene_tracks = {
-        'past_vehicle': sdc_scene.past_vehicle_tracks,  # [::3],
-        'future_vehicle': sdc_scene.future_vehicle_tracks,  # [2::3],
-        'past_pedestrian': sdc_scene.past_pedestrian_tracks,  # [::3],
-        'future_pedestrian': sdc_scene.future_pedestrian_tracks,  # [2::3]
+        'past_vehicle': sdc_scene.past_vehicle_tracks,
+        'future_vehicle': sdc_scene.future_vehicle_tracks,
+        'past_pedestrian': sdc_scene.past_pedestrian_tracks,
+        'future_pedestrian': sdc_scene.future_pedestrian_tracks,
     }
 
     for scene_track_name in scene_tracks:
