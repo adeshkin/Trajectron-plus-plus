@@ -13,11 +13,15 @@ import visualization
 import evaluation
 import matplotlib.pyplot as plt
 from argument_parser import args
+from environment import Environment
 from model.trajectron import Trajectron
 from model.model_registrar import ModelRegistrar
 from model.model_utils import cyclical_lr
 from model.dataset import EnvironmentDataset, collate
 from tensorboardX import SummaryWriter
+
+from ysdc_dataset_api.dataset import MotionPredictionDataset
+
 # torch.autograd.set_detect_anomaly(True)
 
 if not torch.cuda.is_available() or args.device == 'cpu':
@@ -45,6 +49,45 @@ if args.seed is not None:
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
+
+standardization = {
+    'PEDESTRIAN': {
+        'position': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1}
+        },
+        'velocity': {
+            'x': {'mean': 0, 'std': 2},
+            'y': {'mean': 0, 'std': 2}
+        },
+        'acceleration': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1}
+        }
+    },
+    'VEHICLE': {
+        'position': {
+            'x': {'mean': 0, 'std': 80},
+            'y': {'mean': 0, 'std': 80}
+        },
+        'velocity': {
+            'x': {'mean': 0, 'std': 15},
+            'y': {'mean': 0, 'std': 15},
+            'norm': {'mean': 0, 'std': 15}
+        },
+        'acceleration': {
+            'x': {'mean': 0, 'std': 4},
+            'y': {'mean': 0, 'std': 4},
+            'norm': {'mean': 0, 'std': 4}
+        },
+        'heading': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1},
+            '°': {'mean': 0, 'std': np.pi},
+            'd°': {'mean': 0, 'std': 1}
+        }
+    }
+}
 
 
 def main():
@@ -106,46 +149,64 @@ def main():
         log_writer = SummaryWriter(log_dir=model_dir)
 
     # Load training and evaluation environments and scenes
-    train_scenes = []
+    # train_scenes = []
     train_data_path = os.path.join(args.data_dir, args.train_data_dict)
     with open(train_data_path, 'rb') as f:
         train_env = dill.load(f, encoding='latin1')
 
-    for attention_radius_override in args.override_attention_radius:
-        node_type1, node_type2, attention_radius = attention_radius_override.split(' ')
-        train_env.attention_radius[(node_type1, node_type2)] = float(attention_radius)
+    # for attention_radius_override in args.override_attention_radius:
+    #    node_type1, node_type2, attention_radius = attention_radius_override.split(' ')
+    #    train_env.attention_radius[(node_type1, node_type2)] = float(attention_radius)
 
-    if train_env.robot_type is None and hyperparams['incl_robot_node']:
-        train_env.robot_type = train_env.NodeType[0]  # TODO: Make more general, allow the user to specify?
-        for scene in train_env.scenes:
-            scene.add_robot_from_nodes(train_env.robot_type)
+    # if train_env.robot_type is None and hyperparams['incl_robot_node']:
+    #    train_env.robot_type = train_env.NodeType[0]  # TODO: Make more general, allow the user to specify?
+    #    for scene in train_env.scenes:
+    #        scene.add_robot_from_nodes(train_env.robot_type)
 
-    train_scenes = train_env.scenes
-    train_scenes_sample_probs = train_env.scenes_freq_mult_prop if args.scene_freq_mult_train else None
+    # train_scenes = train_env.scenes
+    # train_scenes_sample_probs = train_env.scenes_freq_mult_prop if args.scene_freq_mult_train else None
 
-    train_dataset = EnvironmentDataset(train_env,
-                                       hyperparams['state'],
-                                       hyperparams['pred_state'],
-                                       scene_freq_mult=hyperparams['scene_freq_mult_train'],
-                                       node_freq_mult=hyperparams['node_freq_mult_train'],
-                                       hyperparams=hyperparams,
-                                       min_history_timesteps=hyperparams['minimum_history_length'],
-                                       min_future_timesteps=hyperparams['prediction_horizon'],
-                                       return_robot=not args.incl_robot_node)
+    # train_dataset = EnvironmentDataset(train_env,
+    #                                   hyperparams['state'],
+    #                                   hyperparams['pred_state'],
+    #                                   scene_freq_mult=hyperparams['scene_freq_mult_train'],
+    #                                   node_freq_mult=hyperparams['node_freq_mult_train'],
+    #                                   hyperparams=hyperparams,
+    #                                   min_history_timesteps=hyperparams['minimum_history_length'],
+    #                                   min_future_timesteps=hyperparams['prediction_horizon'],
+    #                                   return_robot=not args.incl_robot_node)
+
+    env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
+    attention_radius = dict()
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+
+    env.attention_radius = attention_radius
+
+    dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_pb/'
+    scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_tags.txt'
+
     train_data_loader = dict()
-    for node_type_data_set in train_dataset:
-        if len(node_type_data_set) == 0:
-            continue
-
+    for node_type in env.NodeType:  # train_dataset:
+        # if len(node_type_data_set) == 0:
+        #    continue
+        node_type_data_set = MotionPredictionDataset(
+            dataset_path=dataset_path,
+            scene_tags_fpath=scene_tags_fpath,
+            hyperparams=hyperparams,
+            node_type=node_type
+        )
         node_type_dataloader = utils.data.DataLoader(node_type_data_set,
                                                      collate_fn=collate,
                                                      pin_memory=False if args.device is 'cpu' else True,
                                                      batch_size=args.batch_size,
-                                                     shuffle=True,
+                                                     #shuffle=True,
                                                      num_workers=args.preprocess_workers)
-        train_data_loader[node_type_data_set.node_type] = node_type_dataloader
+        train_data_loader[node_type] = node_type_dataloader
 
-    print(f"Loaded training data from {train_data_path}")
+    print(f"Loaded training data from {dataset_path}")
 
     eval_scenes = []
     eval_scenes_sample_probs = None
@@ -184,26 +245,26 @@ def main():
                                                          collate_fn=collate,
                                                          pin_memory=False if args.eval_device is 'cpu' else True,
                                                          batch_size=args.eval_batch_size,
-                                                         shuffle=True,
+                                                         #shuffle=True,
                                                          num_workers=args.preprocess_workers)
             eval_data_loader[node_type_data_set.node_type] = node_type_dataloader
 
         print(f"Loaded evaluation data from {eval_data_path}")
 
     # Offline Calculate Scene Graph
-    if hyperparams['offline_scene_graph'] == 'yes':
-        print(f"Offline calculating scene graphs")
-        for i, scene in enumerate(train_scenes):
-            scene.calculate_scene_graph(train_env.attention_radius,
-                                        hyperparams['edge_addition_filter'],
-                                        hyperparams['edge_removal_filter'])
-            print(f"Created Scene Graph for Training Scene {i}")
-
-        for i, scene in enumerate(eval_scenes):
-            scene.calculate_scene_graph(eval_env.attention_radius,
-                                        hyperparams['edge_addition_filter'],
-                                        hyperparams['edge_removal_filter'])
-            print(f"Created Scene Graph for Evaluation Scene {i}")
+    #if hyperparams['offline_scene_graph'] == 'yes':
+    #    print(f"Offline calculating scene graphs")
+    #    for i, scene in enumerate(train_scenes):
+    #        scene.calculate_scene_graph(train_env.attention_radius,
+    #                                    hyperparams['edge_addition_filter'],
+    #                                    hyperparams['edge_removal_filter'])
+    #        print(f"Created Scene Graph for Training Scene {i}")
+    #
+    #    for i, scene in enumerate(eval_scenes):
+    #        scene.calculate_scene_graph(eval_env.attention_radius,
+    #                                    hyperparams['edge_addition_filter'],
+    #                                    hyperparams['edge_removal_filter'])
+    #        print(f"Created Scene Graph for Evaluation Scene {i}")
 
     model_registrar = ModelRegistrar(model_dir, args.device)
 
@@ -228,11 +289,13 @@ def main():
 
     optimizer = dict()
     lr_scheduler = dict()
-    for node_type in train_env.NodeType:
+    for node_type in env.NodeType:
         if node_type not in hyperparams['pred_state']:
             continue
-        optimizer[node_type] = optim.Adam([{'params': model_registrar.get_all_but_name_match('map_encoder').parameters()},
-                                           {'params': model_registrar.get_name_match('map_encoder').parameters(), 'lr':0.0008}], lr=hyperparams['learning_rate'])
+        optimizer[node_type] = optim.Adam(
+            [{'params': model_registrar.get_all_but_name_match('map_encoder').parameters()},
+             {'params': model_registrar.get_name_match('map_encoder').parameters(), 'lr': 0.0008}],
+            lr=hyperparams['learning_rate'])
         # Set Learning Rate
         if hyperparams['learning_rate_style'] == 'const':
             lr_scheduler[node_type] = optim.lr_scheduler.ExponentialLR(optimizer[node_type], gamma=1.0)
@@ -246,11 +309,11 @@ def main():
     curr_iter_node_type = {node_type: 0 for node_type in train_data_loader.keys()}
     for epoch in range(1, args.train_epochs + 1):
         model_registrar.to(args.device)
-        train_dataset.augment = args.augment
+        #train_dataset.augment = args.augment
         for node_type, data_loader in train_data_loader.items():
             curr_iter = curr_iter_node_type[node_type]
             pbar = tqdm(data_loader, ncols=80)
-            for batch in pbar:
+            for step_num, batch in enumerate(pbar):
                 trajectron.set_curr_iter(curr_iter)
                 trajectron.step_annealers(node_type)
                 optimizer[node_type].zero_grad()
@@ -267,13 +330,17 @@ def main():
 
                 if not args.debug:
                     log_writer.add_scalar(f"{node_type}/train/learning_rate",
-                                          lr_scheduler[node_type].get_lr()[0],
+                                          lr_scheduler[node_type].get_last_lr()[0],
                                           curr_iter)
                     log_writer.add_scalar(f"{node_type}/train/loss", train_loss, curr_iter)
 
+                if step_num % 100 == 0:
+                    model_registrar.save_models(step_num)
+
                 curr_iter += 1
+
             curr_iter_node_type[node_type] = curr_iter
-        train_dataset.augment = False
+        #train_dataset.augment = False
         if args.eval_every is not None or args.vis_every is not None:
             eval_trajectron.set_curr_iter(epoch)
 

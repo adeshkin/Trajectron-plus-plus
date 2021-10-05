@@ -119,6 +119,7 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
 
         neighbors_data_st = dict()
         neighbors_edge_value = dict()
+
         for edge_type in edge_types:
             neighbors_data_st[edge_type] = list()
             # We get all nodes which are connected to the current node for the current timestep

@@ -36,7 +36,6 @@ class Trajectron(object):
 
         self.node_models_dict.clear()
         edge_types = env.get_edge_types()
-
         for node_type in env.NodeType:
             # Only add a Model for NodeTypes we want to predict
             if node_type in self.pred_state.keys():
@@ -70,26 +69,16 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         map) = batch  # mask
+         map) = batch
 
-        x = x_t.to(self.device) # mask
-        y = y_t.to(self.device) # mask
-        x_st_t = x_st_t.to(self.device) # mask
-        y_st_t = y_st_t.to(self.device) # mask
+        x = x_t.to(self.device)
+        y = y_t.to(self.device)
+        x_st_t = x_st_t.to(self.device)
+        y_st_t = y_st_t.to(self.device)
         if robot_traj_st_t is not None:
             robot_traj_st_t = robot_traj_st_t.to(self.device)
         if type(map) == torch.Tensor:
-            map = map.to(self.device) # mask
-
-        #neighbors = restore(neighbors_data_st)
-        #for key in neighbors:
-        #    n_k = np.array(neighbors[key])
-        #    neighbors[key] = n_k.tolist()
-
-        #neighbors_edge = restore(neighbors_edge_value)
-        #for key in neighbors_edge:
-        #    n_k = np.array(neighbors_edge[key])[mask]
-        #    neighbors_edge[key] = n_k.tolist()
+            map = map.to(self.device)
 
         # Run forward pass
         model = self.node_models_dict[node_type]
@@ -195,15 +184,6 @@ class Trajectron(object):
                                         all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
-
-            if scene.prediction_request_agent_ids:
-                mask_agents = np.array([repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
-                if True not in mask_agents:
-                    continue
-
-                predictions_np = predictions_np[:, mask_agents]
-                timesteps_o = np.array(timesteps_o)[mask_agents]
-                nodes = np.array(nodes)[mask_agents]
 
             # Assign predictions to node
             for i, ts in enumerate(timesteps_o):
