@@ -56,8 +56,8 @@ class NodeTypeDataset(data.Dataset):
             present_node_dict = scene.present_nodes(np.arange(0, scene.timesteps), type=self.node_type, **kwargs)
             for t, nodes in present_node_dict.items():
                 for node in nodes:
-                    index += [(scene, t, node)] *\
-                             (scene.frequency_multiplier if scene_freq_mult else 1) *\
+                    index += [(scene, t, node)] * \
+                             (scene.frequency_multiplier if scene_freq_mult else 1) * \
                              (node.frequency_multiplier if node_freq_mult else 1)
 
         return index
@@ -73,6 +73,6 @@ class NodeTypeDataset(data.Dataset):
             node = scene.get_node_by_id(node.id)
 
         node_timestep_data = get_node_timestep_data(self.env, scene, t, node, self.state, self.pred_state,
-                                      self.edge_types, self.max_ht, self.max_ft, self.hyperparams)
+                                                    self.edge_types, self.max_ht, self.max_ft, self.hyperparams)
 
-        return node_timestep_data  # , repr(node).split('/')[1] in scene.prediction_request_agent_ids
+        return node_timestep_data
