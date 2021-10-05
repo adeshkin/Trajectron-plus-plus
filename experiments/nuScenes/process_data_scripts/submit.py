@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 
-from ysdc_dataset_api.evaluation import Submission, object_prediction_from_model_output, save_submission_proto
+from ysdc_dataset_api.evaluation import Submission, ObjectPrediction, trajectory_array_to_proto, WeightedTrajectory, save_submission_proto
 from ysdc_dataset_api.dataset import MotionPredictionDataset
 
 sys.path.append("/home/cds-k/Desktop/motion_prediction/Trajectron-plus-plus/trajectron")
@@ -164,19 +164,19 @@ def main():
                                                full_dist=False)
 
             for result in predictions:
-                traj1 = {'trajectory': result['traj'].tolist(),
-                         'weight': 1.0}
+                pred = ObjectPrediction()
+                pred.track_id = int(result['track_id'])
+                pred.scene_id = result['scene_id']
+                pred.weighted_trajectories.append(WeightedTrajectory(
+                    trajectory=trajectory_array_to_proto(result['traj']),
+                    weight=1.0,
+                ))
+                # pred.uncertainty_measure=100
+                pred.is_ood = is_ood
 
-                proto = object_prediction_from_model_output(
-                    track_id=result['track_id'],
-                    scene_id=result['scene_id'],
-                    weighted_trajectories=[traj1],
-                    uncertainty_measure=100,
-                    is_ood=is_ood)
+                submission.predictions.append(pred)
 
-                submission.predictions.append(proto)
-
-            save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
+    save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
 
 
 if __name__ == '__main__':
