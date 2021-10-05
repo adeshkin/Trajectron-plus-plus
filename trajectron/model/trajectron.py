@@ -187,10 +187,14 @@ class Trajectron(object):
             predictions_np = predictions.cpu().detach().numpy()
             timesteps_o = np.array([24])
             # Assign predictions to node
+            results = []
             for i, ts in enumerate(timesteps_o):
                 if ts not in predictions_dict.keys():
                     predictions_dict[ts] = dict()
                 for k, prediction_np in enumerate(predictions_np[0]):
-                    predictions_dict[ts][(node_id[k], scene_id[k])] = prediction_np
+                    result = {'traj': prediction_np,
+                              'track_id': node_id[k],
+                              'scene_id': scene_id[k]}
+                    results.append(result)
 
-        return predictions_dict
+        return results

@@ -99,8 +99,7 @@ def main():
     prerendered_dataset_path = None
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
     model_dir = '../models/models_05_Oct_2021_10_30_29_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_64'
-    model_epoch = 600
-    dt = 0.2
+    model_epoch = 1000
 
     with open('../train_configs/config_ph_25_maxhl_24_minhl_24.json', 'r', encoding='utf-8') as conf_json:
         hyperparams = json.load(conf_json)
@@ -136,13 +135,13 @@ def main():
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
                                                          collate_fn=collate,
                                                          pin_memory=True,
-                                                         batch_size=5,
-                                                         num_workers=1)
+                                                         batch_size=64,
+                                                         num_workers=10)
 
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate,
                                                       pin_memory=True,
-                                                      batch_size=5,
+                                                      batch_size=64,
                                                       num_workers=1)
 
     eval_stg, hyp = load_model(model_dir, env, ts=model_epoch)
@@ -164,19 +163,20 @@ def main():
                                                gmm_mode=True,
                                                full_dist=False)
 
-            prediction_dict, histories_dict, futures_dict = \
-                prediction_output_to_trajectories(predictions, dt=dt, max_h=24, ph=25, map=None)
+            for result in predictions:
+                traj1 = {'trajectory': result['traj'].tolist(),
+                         'weight': 1.0}
 
-            for i, data_item_output in enumerate(batch_output):
                 proto = object_prediction_from_model_output(
-                    track_id=batch['track_id'][i],
-                    scene_id=batch['scene_id'][i],
-                    model_output=data_item_output,
+                    track_id=result['track_id'],
+                    scene_id=result['scene_id'],
+                    weighted_trajectories=[traj1],
+                    uncertainty_measure=100,
                     is_ood=is_ood)
 
                 submission.predictions.append(proto)
 
-    save_submission_proto('dev_moscow_and_ood_submission.pb', submission=submission)
+            save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
 
 
 if __name__ == '__main__':
