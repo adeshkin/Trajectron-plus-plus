@@ -140,20 +140,21 @@ class Trajectron(object):
                 all_z_sep=False):
 
         predictions_dict = {}
-        for node_type in self.env.NodeType:
+        for node_type in [self.env.NodeType[0]]:
             if node_type not in self.pred_state:
                 continue
 
             model = self.node_models_dict[node_type]
 
             # Get Input data for node type and given timesteps
-            batch = get_timesteps_data(env=self.env, scene=scene, t=timesteps, node_type=node_type, state=self.state,
-                                       pred_state=self.pred_state, edge_types=model.edge_types,
-                                       min_ht=min_history_timesteps, max_ht=self.max_ht, min_ft=min_future_timesteps,
-                                       max_ft=min_future_timesteps, hyperparams=self.hyperparams)
+            #batch = get_timesteps_data(env=self.env, scene=scene, t=timesteps, node_type=node_type, state=self.state,
+            #                           pred_state=self.pred_state, edge_types=model.edge_types,
+            #                           min_ht=min_history_timesteps, max_ht=self.max_ht, min_ft=min_future_timesteps,
+            #                           max_ft=min_future_timesteps, hyperparams=self.hyperparams)
             # There are no nodes of type present for timestep
-            if batch is None:
-                continue
+            #if batch is None:
+            #    continue
+            batch = scene
             (first_history_index,
              x_t, y_t, x_st_t, y_st_t,
              neighbors_data_st,

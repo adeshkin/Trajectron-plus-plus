@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-sys.path.append("../../../trajectron")
+sys.path.append("/home/cds-k/Desktop/motion_prediction/Trajectron-plus-plus/trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of as derivative_of
 from model.dataset import get_node_timestep_data

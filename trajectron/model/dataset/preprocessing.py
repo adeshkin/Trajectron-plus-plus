@@ -19,7 +19,10 @@ def restore(data):
     return data
 
 
-def collate(batch):
+def collate(batch_):
+    batch = batch_[0]
+    node_id = batch_[1]
+    scene_id = batch_[2]
     if len(batch) == 0:
         return batch
     elem = batch[0]
@@ -45,7 +48,7 @@ def collate(batch):
         # we only do this in multiprocessing
         neighbor_dict = {key: [d[key] for d in batch] for key in elem}
         return dill.dumps(neighbor_dict) if torch.utils.data.get_worker_info() else neighbor_dict
-    return default_collate(batch)
+    return default_collate(batch), node_id, scene_id
 
 
 def get_relative_robot_traj(env, state, node_traj, robot_traj, node_type, robot_type):
