@@ -98,8 +98,8 @@ def main():
     validation_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_pb/'
     prerendered_dataset_path = None
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
-    model_dir = None
-    model_epoch = None
+    model_dir = '../models/models_05_Oct_2021_10_30_29_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_64'
+    model_epoch = 600
     dt = 0.2
 
     with open('../train_configs/config_ph_25_maxhl_24_minhl_24.json', 'r', encoding='utf-8') as conf_json:
@@ -136,14 +136,14 @@ def main():
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
                                                          collate_fn=collate,
                                                          pin_memory=True,
-                                                         batch_size=32,
-                                                         num_workers=10)
+                                                         batch_size=5,
+                                                         num_workers=1)
 
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate,
                                                       pin_memory=True,
-                                                      batch_size=32,
-                                                      num_workers=10)
+                                                      batch_size=5,
+                                                      num_workers=1)
 
     eval_stg, hyp = load_model(model_dir, env, ts=model_epoch)
 

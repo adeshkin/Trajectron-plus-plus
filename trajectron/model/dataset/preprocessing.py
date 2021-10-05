@@ -20,9 +20,17 @@ def restore(data):
 
 
 def collate(batch_):
-    batch = batch_[0]
-    node_id = batch_[1]
-    scene_id = batch_[2]
+    batch = []
+    node_id = []
+    scene_id = []
+    if isinstance(batch_, list):
+        for b_ in batch_:
+            batch.append(b_[0])
+            node_id.append(b_[1])
+            scene_id.append(b_[2])
+    else:
+        batch = batch_
+
     if len(batch) == 0:
         return batch
     elem = batch[0]
@@ -41,14 +49,15 @@ def collate(batch_):
                                                                      rotation=heading_angle)
             return map
         transposed = zip(*batch)
-        return [collate(samples) for samples in transposed]
+        return [collate(samples) for samples in transposed], node_id, scene_id
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
         # shared memory separately -> slow, file pointer overhead
         # we only do this in multiprocessing
         neighbor_dict = {key: [d[key] for d in batch] for key in elem}
         return dill.dumps(neighbor_dict) if torch.utils.data.get_worker_info() else neighbor_dict
-    return default_collate(batch), node_id, scene_id
+
+    return default_collate(batch)
 
 
 def get_relative_robot_traj(env, state, node_traj, robot_traj, node_type, robot_type):

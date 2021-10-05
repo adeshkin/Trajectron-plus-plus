@@ -160,7 +160,7 @@ class Trajectron(object):
              neighbors_data_st,
              neighbors_edge_value,
              robot_traj_st_t,
-             map), nodes, timesteps_o = batch
+             map), node_id, scene_id = batch
 
             x = x_t.to(self.device)
             x_st_t = x_st_t.to(self.device)
@@ -173,8 +173,8 @@ class Trajectron(object):
             predictions = model.predict(inputs=x,
                                         inputs_st=x_st_t,
                                         first_history_indices=first_history_index,
-                                        neighbors=neighbors_data_st,
-                                        neighbors_edge_value=neighbors_edge_value,
+                                        neighbors=restore(neighbors_data_st),
+                                        neighbors_edge_value=restore(neighbors_edge_value),
                                         robot=robot_traj_st_t,
                                         map=map,
                                         prediction_horizon=ph,
@@ -185,11 +185,12 @@ class Trajectron(object):
                                         all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
-
+            timesteps_o = np.array([24])
             # Assign predictions to node
             for i, ts in enumerate(timesteps_o):
                 if ts not in predictions_dict.keys():
                     predictions_dict[ts] = dict()
-                predictions_dict[ts][nodes[i]] = np.transpose(predictions_np[:, [i]], (1, 0, 2, 3))
+                for k, prediction_np in enumerate(predictions_np[0]):
+                    predictions_dict[ts][(node_id[k], scene_id[k])] = prediction_np
 
         return predictions_dict
