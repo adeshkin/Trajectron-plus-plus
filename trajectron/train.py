@@ -273,7 +273,7 @@ def main():
                             log_writer,
                             args.device)
 
-    trajectron.set_environment(train_env)
+    trajectron.set_environment(env)
     trajectron.set_annealing_params()
     print('Created Training Model.')
 

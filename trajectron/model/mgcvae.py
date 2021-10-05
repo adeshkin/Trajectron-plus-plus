@@ -45,7 +45,8 @@ class MultimodalGenerativeCVAE(object):
 
         dynamic_class = getattr(dynamic_module, hyperparams['dynamic'][self.node_type]['name'])
         dyn_limits = hyperparams['dynamic'][self.node_type]['limits']
-        self.dynamic = dynamic_class(self.env.scenes[0].dt, dyn_limits, device,
+        dt = 0.2  # self.env.scenes[0].dt
+        self.dynamic = dynamic_class(dt, dyn_limits, device,
                                      self.model_registrar, self.x_size, self.node_type)
 
     def set_curr_iter(self, curr_iter):
