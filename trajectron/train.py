@@ -150,9 +150,9 @@ def main():
 
     # Load training and evaluation environments and scenes
     # train_scenes = []
-    train_data_path = os.path.join(args.data_dir, args.train_data_dict)
-    with open(train_data_path, 'rb') as f:
-        train_env = dill.load(f, encoding='latin1')
+    # train_data_path = os.path.join(args.data_dir, args.train_data_dict)
+    # with open(train_data_path, 'rb') as f:
+    #    train_env = dill.load(f, encoding='latin1')
 
     # for attention_radius_override in args.override_attention_radius:
     #    node_type1, node_type2, attention_radius = attention_radius_override.split(' ')
@@ -182,19 +182,21 @@ def main():
     attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
     attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
     attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
-
     env.attention_radius = attention_radius
 
-    dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_pb/'
-    scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_tags.txt'
+    train_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_pb/'
+    train_scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_tags.txt'
 
     train_data_loader = dict()
     for node_type in env.NodeType:  # train_dataset:
         # if len(node_type_data_set) == 0:
         #    continue
+        if node_type == 'PEDESTRIAN':
+            continue
+
         node_type_data_set = MotionPredictionDataset(
-            dataset_path=dataset_path,
-            scene_tags_fpath=scene_tags_fpath,
+            dataset_path=train_dataset_path,
+            scene_tags_fpath=train_scene_tags_fpath,
             hyperparams=hyperparams,
             node_type=node_type
         )
@@ -206,8 +208,8 @@ def main():
                                                      num_workers=args.preprocess_workers)
         train_data_loader[node_type] = node_type_dataloader
 
-    print(f"Loaded training data from {dataset_path}")
-
+    print(f"Loaded training data from {train_dataset_path}")
+    '''
     eval_scenes = []
     eval_scenes_sample_probs = None
     if args.eval_every is not None:
@@ -265,7 +267,7 @@ def main():
     #                                    hyperparams['edge_addition_filter'],
     #                                    hyperparams['edge_removal_filter'])
     #        print(f"Created Scene Graph for Evaluation Scene {i}")
-
+    '''
     model_registrar = ModelRegistrar(model_dir, args.device)
 
     trajectron = Trajectron(model_registrar,
@@ -276,7 +278,7 @@ def main():
     trajectron.set_environment(env)
     trajectron.set_annealing_params()
     print('Created Training Model.')
-
+    '''
     eval_trajectron = None
     if args.eval_every is not None or args.vis_every is not None:
         eval_trajectron = Trajectron(model_registrar,
@@ -286,7 +288,7 @@ def main():
         eval_trajectron.set_environment(eval_env)
         eval_trajectron.set_annealing_params()
     print('Created Evaluation Model.')
-
+    '''
     optimizer = dict()
     lr_scheduler = dict()
     for node_type in env.NodeType:
@@ -309,7 +311,7 @@ def main():
     curr_iter_node_type = {node_type: 0 for node_type in train_data_loader.keys()}
     for epoch in range(1, args.train_epochs + 1):
         model_registrar.to(args.device)
-        #train_dataset.augment = args.augment
+        # train_dataset.augment = args.augment
         for node_type, data_loader in train_data_loader.items():
             curr_iter = curr_iter_node_type[node_type]
             pbar = tqdm(data_loader, ncols=80)
@@ -340,7 +342,8 @@ def main():
                 curr_iter += 1
 
             curr_iter_node_type[node_type] = curr_iter
-        #train_dataset.augment = False
+        '''
+        train_dataset.augment = False
         if args.eval_every is not None or args.vis_every is not None:
             eval_trajectron.set_curr_iter(epoch)
 
@@ -503,6 +506,7 @@ def main():
 
         if args.save_every is not None and args.debug is False and epoch % args.save_every == 0:
             model_registrar.save_models(epoch)
+        '''
 
 
 if __name__ == '__main__':
