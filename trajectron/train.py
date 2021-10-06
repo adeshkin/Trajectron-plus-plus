@@ -337,7 +337,7 @@ def main():
                     log_writer.add_scalar(f"{node_type}/train/loss", train_loss, curr_iter)
 
                 if step_num % 1000 == 0:
-                    model_registrar.save_models(step_num)
+                    model_registrar.save_models(f'{epoch}_{step_num}')
 
                 curr_iter += 1
 
