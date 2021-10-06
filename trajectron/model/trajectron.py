@@ -69,7 +69,7 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         map), node_id, scene_id = batch
+         map) = batch  # , node_id, scene_id = batch
 
         x = x_t.to(self.device)
         y = y_t.to(self.device)
