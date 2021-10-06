@@ -20,6 +20,8 @@ def restore(data):
 
 
 def collate(batch_):
+    batch = batch_
+    """
     batch = []
     node_id = []
     scene_id = []
@@ -30,7 +32,7 @@ def collate(batch_):
             scene_id.append(b_[2])
     else:
         batch = batch_
-
+    """
     if len(batch) == 0:
         return batch
     elem = batch[0]
@@ -49,7 +51,7 @@ def collate(batch_):
                                                                      rotation=heading_angle)
             return map
         transposed = zip(*batch)
-        return [collate(samples) for samples in transposed], node_id, scene_id
+        return [collate(samples) for samples in transposed] # , node_id, scene_id
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
         # shared memory separately -> slow, file pointer overhead

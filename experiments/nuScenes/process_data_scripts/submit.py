@@ -135,14 +135,14 @@ def main():
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
                                                          collate_fn=collate,
                                                          pin_memory=True,
-                                                         batch_size=64,
+                                                         batch_size=128,
                                                          num_workers=10)
 
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate,
                                                       pin_memory=True,
-                                                      batch_size=64,
-                                                      num_workers=1)
+                                                      batch_size=128,
+                                                      num_workers=10)
 
     eval_stg, hyp = load_model(model_dir, env, ts=model_epoch)
 
@@ -176,7 +176,7 @@ def main():
 
                 submission.predictions.append(pred)
 
-    save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
+    save_submission_proto('dev_moscow_and_ood_submission_1000__.pb', submission=submission)
 
 
 if __name__ == '__main__':
