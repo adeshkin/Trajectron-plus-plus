@@ -1,10 +1,10 @@
 dataset_name: 'sdc_validation'
 preprocessed_data_dir: 'processed_sdc'
 save_dir: 'visualizations/sdc_validation'
-model_name: 'models_01_Oct_2021_11_14_33_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_512' # int_ee int_ee_me robot vel_ee
-model_epoch: 7
-num_samples: 100
-scene_idx: 17
+model_name: 'models_06_Oct_2021_14_55_12_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_128' # int_ee int_ee_me robot vel_ee
+model_epoch: 4000
+num_samples: 1
+scene_idx: 47
 ph: 25
 max_h: 24
 min_h: 24

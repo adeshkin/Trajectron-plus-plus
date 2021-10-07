@@ -63,7 +63,7 @@ class ModelRegistrar(nn.Module):
         self.model_dict.clear()
         
         save_path = os.path.join(self.model_dir,
-                                 'model_registrar-%d.pt' % iter_num)
+                                 'model_registrar-1_%d.pt' % iter_num)
 
         print('')
         print('Loading from ' + save_path)

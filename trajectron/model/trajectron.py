@@ -127,7 +127,7 @@ class Trajectron(object):
 
         return nll.cpu().detach().numpy()
 
-    def predict(self,
+    def predict_sdc(self,
                 scene,
                 timesteps,
                 ph,
@@ -146,14 +146,6 @@ class Trajectron(object):
 
             model = self.node_models_dict[node_type]
 
-            # Get Input data for node type and given timesteps
-            #batch = get_timesteps_data(env=self.env, scene=scene, t=timesteps, node_type=node_type, state=self.state,
-            #                           pred_state=self.pred_state, edge_types=model.edge_types,
-            #                           min_ht=min_history_timesteps, max_ht=self.max_ht, min_ft=min_future_timesteps,
-            #                           max_ft=min_future_timesteps, hyperparams=self.hyperparams)
-            # There are no nodes of type present for timestep
-            #if batch is None:
-            #    continue
             batch = scene
             (first_history_index,
              x_t, y_t, x_st_t, y_st_t,
@@ -198,3 +190,78 @@ class Trajectron(object):
                     results.append(result)
 
         return results
+
+    def predict(self,
+                scene,
+                timesteps,
+                ph,
+                num_samples=1,
+                min_future_timesteps=0,
+                min_history_timesteps=1,
+                z_mode=False,
+                gmm_mode=False,
+                full_dist=True,
+                all_z_sep=False):
+
+        predictions_dict = {}
+        for node_type in self.env.NodeType:
+            if node_type not in self.pred_state:
+                continue
+
+            model = self.node_models_dict[node_type]
+
+            # Get Input data for node type and given timesteps
+            batch = get_timesteps_data(env=self.env, scene=scene, t=timesteps, node_type=node_type, state=self.state,
+                                       pred_state=self.pred_state, edge_types=model.edge_types,
+                                       min_ht=min_history_timesteps, max_ht=self.max_ht, min_ft=min_future_timesteps,
+                                       max_ft=min_future_timesteps, hyperparams=self.hyperparams)
+            # There are no nodes of type present for timestep
+            if batch is None:
+                continue
+            (first_history_index,
+             x_t, y_t, x_st_t, y_st_t,
+             neighbors_data_st,
+             neighbors_edge_value,
+             robot_traj_st_t,
+             map), nodes, timesteps_o = batch
+
+            x = x_t.to(self.device)
+            x_st_t = x_st_t.to(self.device)
+            if robot_traj_st_t is not None:
+                robot_traj_st_t = robot_traj_st_t.to(self.device)
+            if type(map) == torch.Tensor:
+                map = map.to(self.device)
+
+            # Run forward pass
+            predictions = model.predict(inputs=x,
+                                        inputs_st=x_st_t,
+                                        first_history_indices=first_history_index,
+                                        neighbors=neighbors_data_st,
+                                        neighbors_edge_value=neighbors_edge_value,
+                                        robot=robot_traj_st_t,
+                                        map=map,
+                                        prediction_horizon=ph,
+                                        num_samples=num_samples,
+                                        z_mode=z_mode,
+                                        gmm_mode=gmm_mode,
+                                        full_dist=full_dist,
+                                        all_z_sep=all_z_sep)
+
+            predictions_np = predictions.cpu().detach().numpy()
+
+            if scene.prediction_request_agent_ids:
+                mask_agents = np.array(
+                    [repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
+                if True not in mask_agents:
+                    continue
+                predictions_np = predictions_np[:, mask_agents]
+                timesteps_o = np.array(timesteps_o)[mask_agents]
+                nodes = np.array(nodes)[mask_agents]
+
+            # Assign predictions to node
+            for i, ts in enumerate(timesteps_o):
+                if ts not in predictions_dict.keys():
+                    predictions_dict[ts] = dict()
+                predictions_dict[ts][nodes[i]] = np.transpose(predictions_np[:, [i]], (1, 0, 2, 3))
+
+        return predictions_dict
