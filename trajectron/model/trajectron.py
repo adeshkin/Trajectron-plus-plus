@@ -69,7 +69,7 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         map) = batch  # , node_id, scene_id = batch
+         map) = batch
 
         x = x_t.to(self.device)
         y = y_t.to(self.device)
@@ -127,26 +127,22 @@ class Trajectron(object):
 
         return nll.cpu().detach().numpy()
 
-    def predict_sdc(self,
-                scene,
-                timesteps,
-                ph,
-                num_samples=1,
-                min_future_timesteps=0,
-                min_history_timesteps=1,
-                z_mode=False,
-                gmm_mode=False,
-                full_dist=True,
-                all_z_sep=False):
-
-        predictions_dict = {}
-        for node_type in [self.env.NodeType[0]]:
+    def predict_dataloader(self,
+                           batch,
+                           ph,
+                           node_types,
+                           num_samples=1,
+                           z_mode=False,
+                           gmm_mode=False,
+                           full_dist=True,
+                           all_z_sep=False):
+        results = []
+        for node_type in node_types:
             if node_type not in self.pred_state:
                 continue
 
             model = self.node_models_dict[node_type]
 
-            batch = scene
             (first_history_index,
              x_t, y_t, x_st_t, y_st_t,
              neighbors_data_st,
@@ -177,17 +173,12 @@ class Trajectron(object):
                                         all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
-            timesteps_o = np.array([24])
-            # Assign predictions to node
-            results = []
-            for i, ts in enumerate(timesteps_o):
-                if ts not in predictions_dict.keys():
-                    predictions_dict[ts] = dict()
-                for k, prediction_np in enumerate(predictions_np[0]):
-                    result = {'traj': prediction_np,
-                              'track_id': node_id[k],
-                              'scene_id': scene_id[k]}
-                    results.append(result)
+
+            for k, prediction_np in enumerate(predictions_np[0]):
+                result = {'traj': prediction_np,
+                          'track_id': node_id[k],
+                          'scene_id': scene_id[k]}
+                results.append(result)
 
         return results
 
@@ -249,6 +240,7 @@ class Trajectron(object):
 
             predictions_np = predictions.cpu().detach().numpy()
 
+            # Shifts prediction requests
             if scene.prediction_request_agent_ids:
                 mask_agents = np.array(
                     [repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
