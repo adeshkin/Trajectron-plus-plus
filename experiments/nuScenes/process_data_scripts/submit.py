@@ -6,8 +6,8 @@ import sys
 import numpy as np
 import torch
 
-
-from ysdc_dataset_api.evaluation import Submission, ObjectPrediction, trajectory_array_to_proto, WeightedTrajectory, save_submission_proto
+from ysdc_dataset_api.evaluation import Submission, ObjectPrediction, trajectory_array_to_proto, WeightedTrajectory, \
+    save_submission_proto
 from ysdc_dataset_api.dataset import MotionPredictionDataset
 
 sys.path.append("/home/cds-k/Desktop/motion_prediction/Trajectron-plus-plus/trajectron")
@@ -100,6 +100,7 @@ def main():
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
     model_dir = '../models/models_05_Oct_2021_10_30_29_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_64'
     model_epoch = 1000
+    ph = 25
 
     with open('../train_configs/config_ph_25_maxhl_24_minhl_24.json', 'r', encoding='utf-8') as conf_json:
         hyperparams = json.load(conf_json)
@@ -113,6 +114,7 @@ def main():
     env.attention_radius = attention_radius
 
     node_type = env.NodeType[0]
+    node_types = [node_type]
 
     moscow_validation_dataset = MotionPredictionDataset(
         dataset_path=validation_dataset_path,
@@ -151,17 +153,14 @@ def main():
             [True, False],
             [ood_validation_dataloader, moscow_validation_dataloader]):
         for batch_id, batch in enumerate(tqdm.tqdm(dataloader)):
-            timesteps = np.array([24])
             with torch.no_grad():
-                predictions = eval_stg.predict(batch,
-                                               timesteps,
-                                               25,
-                                               min_future_timesteps=25,
-                                               min_history_timesteps=24,
-                                               num_samples=1,
-                                               z_mode=True,
-                                               gmm_mode=True,
-                                               full_dist=False)
+                predictions = eval_stg.predict_batch(batch,
+                                                     ph,
+                                                     node_types,
+                                                     num_samples=1,
+                                                     z_mode=True,
+                                                     gmm_mode=True,
+                                                     full_dist=False)
 
             for result in predictions:
                 pred = ObjectPrediction()
@@ -171,12 +170,12 @@ def main():
                     trajectory=trajectory_array_to_proto(result['traj']),
                     weight=1.0,
                 ))
-                # pred.uncertainty_measure=100
+                pred.uncertainty_measure = 100
                 pred.is_ood = is_ood
 
                 submission.predictions.append(pred)
 
-    save_submission_proto('dev_moscow_and_ood_submission_1000__.pb', submission=submission)
+    save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
 
 
 if __name__ == '__main__':

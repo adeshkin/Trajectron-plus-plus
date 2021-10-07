@@ -127,15 +127,15 @@ class Trajectron(object):
 
         return nll.cpu().detach().numpy()
 
-    def predict_dataloader(self,
-                           batch,
-                           ph,
-                           node_types,
-                           num_samples=1,
-                           z_mode=False,
-                           gmm_mode=False,
-                           full_dist=True,
-                           all_z_sep=False):
+    def predict_batch(self,
+                      batch,
+                      ph,
+                      node_types,
+                      num_samples=1,
+                      z_mode=False,
+                      gmm_mode=False,
+                      full_dist=True,
+                      all_z_sep=False):
         results = []
         for node_type in node_types:
             if node_type not in self.pred_state:
