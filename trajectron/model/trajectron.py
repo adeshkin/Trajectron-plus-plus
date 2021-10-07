@@ -69,7 +69,7 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         map) = batch
+         _), map = batch
 
         x = x_t.to(self.device)
         y = y_t.to(self.device)

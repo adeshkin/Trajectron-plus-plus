@@ -8,7 +8,8 @@ import torch
 
 from ysdc_dataset_api.evaluation import Submission, ObjectPrediction, trajectory_array_to_proto, WeightedTrajectory, \
     save_submission_proto
-from ysdc_dataset_api.dataset import MotionPredictionDataset
+from ysdc_dataset_api.dataset import MotionPredictionDatasetTrain, MotionPredictionDatasetTest
+from ysdc_dataset_api.features import FeatureRenderer
 
 sys.path.append("/home/cds-k/Desktop/motion_prediction/Trajectron-plus-plus/trajectron")
 from environment import Environment
@@ -54,6 +55,64 @@ standardization = {
             'd°': {'mean': 0, 'std': 1}
         }
     }
+}
+
+
+renderer_config = {
+    # parameters of feature maps to render
+    'feature_map_params': {
+        'rows': 400,
+        'cols': 400,
+        'resolution': 0.25,  # number of meters in one pixel
+    },
+    'renderers_groups': [
+        # Having several feature map groups
+        # allows to independently render feature maps with different history length.
+        # This could be useful to render static features (road graph, etc.) once.
+        {
+            # start: int, first timestamp into the past to render, 0 – prediction time
+            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
+            # step: int, grid step size,
+            #            step=1 renders all points between start and stop,
+            #            step=2 renders every second point, etc.
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                # each value is rendered at its own channel
+                # occupancy -- 1 channel
+                # velocity -- 2 channels (x, y)
+                # acceleration -- 2 channels (x, y)
+                # yaw -- 1 channel
+                {'vehicles': ['occupancy']},
+                # only occupancy and velocity are available for pedestrians
+                {'pedestrians': ['occupancy']},
+            ]
+        },
+        {
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                {
+                    'road_graph': [
+                        'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
+                        'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
+                        'road_polygons',
+                    ]
+                }
+            ]
+        }
+    ]
 }
 
 
@@ -116,19 +175,24 @@ def main():
     node_type = env.NodeType[0]
     node_types = [node_type]
 
-    moscow_validation_dataset = MotionPredictionDataset(
+    renderer = FeatureRenderer(renderer_config)
+
+    moscow_validation_dataset = MotionPredictionDatasetTrain(
         dataset_path=validation_dataset_path,
         prerendered_dataset_path=prerendered_dataset_path,
         scene_tags_fpath=scene_tags_fpath,
+        feature_producer=renderer,
         scene_tags_filter=filter_moscow_no_precipitation_data,
         hyperparams=hyperparams,
         node_type=node_type
     )
+    # dataset_iter = iter(moscow_validation_dataset)
 
-    ood_validation_dataset = MotionPredictionDataset(
+    ood_validation_dataset = MotionPredictionDatasetTrain(
         dataset_path=validation_dataset_path,
         prerendered_dataset_path=prerendered_dataset_path,
         scene_tags_fpath=scene_tags_fpath,
+        feature_producer=renderer,
         scene_tags_filter=filter_ood_validation_data,
         hyperparams=hyperparams,
         node_type=node_type
@@ -137,9 +201,11 @@ def main():
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
                                                          collate_fn=collate,
                                                          pin_memory=True,
-                                                         batch_size=128,
-                                                         num_workers=10)
-
+                                                         batch_size=2,
+                                                         num_workers=1)
+    for batch in moscow_validation_dataloader:
+        data_item = batch
+        break
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate,
                                                       pin_memory=True,

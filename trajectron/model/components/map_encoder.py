@@ -26,3 +26,26 @@ class CNNMapEncoder(nn.Module):
         x = torch.flatten(x, start_dim=1)
         x = self.fc(x)
         return x
+
+
+class CNNMapEncoderSdc(nn.Module):
+    def __init__(self, input_size, hidden_channels, output_size, masks, strides):
+        super(CNNMapEncoderSdc, self).__init__()
+        self.convs = nn.ModuleList()
+        map_channels = input_size[0]
+        x_dummy = torch.ones(input_size).unsqueeze(0) * torch.tensor(float('nan'))
+
+        for i, hidden_size in enumerate(hidden_channels):
+            self.convs.append(nn.Conv2d(map_channels if i == 0 else hidden_channels[i-1],
+                                        hidden_channels[i], masks[i],
+                                        stride=strides[i]))
+            x_dummy = self.convs[i](x_dummy)
+
+        self.fc = nn.Linear(x_dummy.numel(), output_size)
+
+    def forward(self, x, training):
+        for conv in self.convs:
+            x = F.leaky_relu(conv(x), 0.2)
+        x = torch.flatten(x, start_dim=1)
+        x = self.fc(x)
+        return x

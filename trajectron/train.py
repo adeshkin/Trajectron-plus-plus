@@ -20,8 +20,8 @@ from model.model_utils import cyclical_lr
 from model.dataset import EnvironmentDataset, collate
 from tensorboardX import SummaryWriter
 
-from ysdc_dataset_api.dataset import MotionPredictionDataset
-
+from ysdc_dataset_api.dataset import MotionPredictionDatasetTrain
+from ysdc_dataset_api.features import FeatureRenderer
 # torch.autograd.set_detect_anomaly(True)
 
 if not torch.cuda.is_available() or args.device == 'cpu':
@@ -89,6 +89,62 @@ standardization = {
     }
 }
 
+renderer_config = {
+    # parameters of feature maps to render
+    'feature_map_params': {
+        'rows': 400,
+        'cols': 400,
+        'resolution': 0.25,  # number of meters in one pixel
+    },
+    'renderers_groups': [
+        # Having several feature map groups
+        # allows to independently render feature maps with different history length.
+        # This could be useful to render static features (road graph, etc.) once.
+        {
+            # start: int, first timestamp into the past to render, 0 – prediction time
+            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
+            # step: int, grid step size,
+            #            step=1 renders all points between start and stop,
+            #            step=2 renders every second point, etc.
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                # each value is rendered at its own channel
+                # occupancy -- 1 channel
+                # velocity -- 2 channels (x, y)
+                # acceleration -- 2 channels (x, y)
+                # yaw -- 1 channel
+                {'vehicles': ['occupancy']},
+                # only occupancy and velocity are available for pedestrians
+                {'pedestrians': ['occupancy']},
+            ]
+        },
+        {
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                {
+                    'road_graph': [
+                        'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
+                        'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
+                        'road_polygons',
+                    ]
+                }
+            ]
+        }
+    ]
+}
 
 def main():
     # Load hyperparameters from json
@@ -187,6 +243,8 @@ def main():
     train_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_pb/'
     train_scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_tags.txt'
 
+    renderer = FeatureRenderer(renderer_config)
+
     train_data_loader = dict()
     for node_type in env.NodeType:  # train_dataset:
         # if len(node_type_data_set) == 0:
@@ -194,9 +252,10 @@ def main():
         if node_type == 'PEDESTRIAN':
             continue
 
-        node_type_data_set = MotionPredictionDataset(
+        node_type_data_set = MotionPredictionDatasetTrain(
             dataset_path=train_dataset_path,
             scene_tags_fpath=train_scene_tags_fpath,
+            feature_producer=renderer,
             hyperparams=hyperparams,
             node_type=node_type
         )

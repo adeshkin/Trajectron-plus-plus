@@ -20,22 +20,21 @@ def restore(data):
 
 
 def collate(batch_):
-    batch = batch_
-    """
     batch = []
-    node_id = []
-    scene_id = []
+    map_ = []
+
     if isinstance(batch_, list):
         for b_ in batch_:
-            batch.append(b_[0])
-            node_id.append(b_[1])
-            scene_id.append(b_[2])
+            batch.append(b_['node_timestep_data'])
+            map_.append(b_['feature_maps'])
     else:
         batch = batch_
-    """
+
     if len(batch) == 0:
         return batch
+
     elem = batch[0]
+
     if elem is None:
         return None
     elif isinstance(elem, container_abcs.Sequence):
@@ -51,7 +50,8 @@ def collate(batch_):
                                                                      rotation=heading_angle)
             return map
         transposed = zip(*batch)
-        return [collate(samples) for samples in transposed] # , node_id, scene_id
+        tensor_map = np.stack(map_, axis=0)
+        return [collate(samples) for samples in transposed], torch.from_numpy(tensor_map)
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
         # shared memory separately -> slow, file pointer overhead
