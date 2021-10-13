@@ -1153,4 +1153,4 @@ class MultimodalGenerativeCVAE(object):
                                             num_components,
                                             gmm_mode)
 
-        return our_sampled_future
+        return self.latent.p_dist.probs, our_sampled_future

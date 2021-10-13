@@ -1,8 +1,8 @@
 dataset_name: 'sdc_validation'
 preprocessed_data_dir: 'processed_sdc_map'
 save_dir: 'visualizations/sdc_validation'
-model_name: 'models_07_Oct_2021_18_09_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_128'
-checkpoint_name: 'ep_1_step_28000'
+model_name: 'models_13_Oct_2021_15_36_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32'
+checkpoint_name: 'ep_1_step_1000'
 num_samples: 1
 scene_idx: 0
 ph: 25

@@ -111,7 +111,7 @@ def main(params):
         vis_alpha = 0.5
 
     node_id2agent_id = dict()
-    for t in range(1, scene.timesteps - 1):
+    for t in range(24, scene.timesteps - 1):
         timesteps = np.array([t])
         with torch.no_grad():
             predictions = eval_stg.predict(scene,
@@ -122,7 +122,8 @@ def main(params):
                                            num_samples=num_samples,
                                            z_mode=z_mode,
                                            gmm_mode=gmm_mode,
-                                           full_dist=False)
+                                           full_dist=False,
+                                           all_z_sep=True)
 
         prediction_dict, histories_dict, futures_dict = \
             prediction_output_to_trajectories(predictions, dt=scene.dt, max_h=max_h, ph=ph, map=None)

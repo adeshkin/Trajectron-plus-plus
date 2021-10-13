@@ -32,11 +32,11 @@ def collate(batch):
                 heading_angle = None
             else:
                 heading_angle = torch.Tensor(heading_angle)
-            map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
-                                                                     scene_pts=torch.Tensor(scene_pts),
-                                                                     patch_size=patch_size[0],
-                                                                     rotation=heading_angle)
-
+            #map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
+            #                                                         scene_pts=torch.Tensor(scene_pts),
+            #                                                         patch_size=patch_size[0],
+            #                                                         rotation=heading_angle)
+            map = scene_map[0]
             return map
         transposed = zip(*batch)
         return [collate(samples) for samples in transposed]

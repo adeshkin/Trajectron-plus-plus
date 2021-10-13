@@ -215,7 +215,7 @@ class Trajectron(object):
              neighbors_edge_value,
              robot_traj_st_t,
              map), nodes, timesteps_o = batch
-
+            map = torch.randn((1, 10, 400, 400))
             x = x_t.to(self.device)
             x_st_t = x_st_t.to(self.device)
             if robot_traj_st_t is not None:
@@ -224,7 +224,7 @@ class Trajectron(object):
                 map = map.to(self.device)
 
             # Run forward pass
-            predictions = model.predict(inputs=x,
+            probs, predictions = model.predict(inputs=x,
                                         inputs_st=x_st_t,
                                         first_history_indices=first_history_index,
                                         neighbors=neighbors_data_st,
