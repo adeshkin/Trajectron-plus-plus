@@ -68,11 +68,11 @@ def collate_sdc(batch_):
     if elem is None:
         return None
     elif isinstance(elem, container_abcs.Sequence):
-        if len(elem) == 4: # We assume those are the maps, map points, headings and patch_size
-            scene_map, scene_pts, heading_angle, patch_size = zip(*batch)
-            map = scene_map[0]
+        #if len(elem) == 4: # We assume those are the maps, map points, headings and patch_size
+        #    scene_map, scene_pts, heading_angle, patch_size = zip(*batch)
+        #    map = scene_map[0]
 
-            return map
+        #    return map
         transposed = zip(*batch)
         tensor_map = np.stack(map_, axis=0)
         return [collate_sdc(samples) for samples in transposed], torch.from_numpy(tensor_map)

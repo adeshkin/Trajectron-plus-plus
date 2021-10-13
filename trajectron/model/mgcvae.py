@@ -482,12 +482,12 @@ class MultimodalGenerativeCVAE(object):
         # Map Encoding #
         ################
         if self.hyperparams['use_map_encoding'] and self.node_type in self.hyperparams['map_encoder']:
-            if self.log_writer and (self.curr_iter + 1) % 500 == 0:
-                map_clone = map.clone()
-                map_patch = self.hyperparams['map_encoder'][self.node_type]['patch_size']
-                map_clone[:, :, map_patch[1] - 5:map_patch[1] + 5, map_patch[0] - 5:map_patch[0] + 5] = 1.
-                self.log_writer.add_images(f"{self.node_type}/cropped_maps", map_clone,
-                                           self.curr_iter, dataformats='NCWH')
+            #if self.log_writer and (self.curr_iter + 1) % 500 == 0:
+            #    map_clone = map.clone()
+            #    map_patch = self.hyperparams['map_encoder'][self.node_type]['patch_size']
+            #    map_clone[:, :, map_patch[1] - 5:map_patch[1] + 5, map_patch[0] - 5:map_patch[0] + 5] = 1.
+            #    self.log_writer.add_images(f"{self.node_type}/cropped_maps", map_clone,
+            #                               self.curr_iter, dataformats='NCWH')
 
             encoded_map = self.node_modules[self.node_type + '/map_encoder'](map * 2. - 1., (mode == ModeKeys.TRAIN))
             do = self.hyperparams['map_encoder'][self.node_type]['dropout']
