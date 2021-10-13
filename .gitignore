@@ -1,20 +1,9 @@
-pred_figs/
-processed/
-public-code/
-.idea/
-processed_waymo/
-processed_centerpoint_out/
 visualizations/
 videos/
 models/
 results/
-processed_data/
-processed_old/
-processed_new/
-processed_boris/
-processed_boris_new/
-processed_boris_old/
-processed_sdc/
+submissions/
+.idea/
 .benchmarks/
 
 

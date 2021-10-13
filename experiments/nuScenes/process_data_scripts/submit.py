@@ -16,7 +16,6 @@ from environment import Environment
 from model.dataset import collate
 from model.model_registrar import ModelRegistrar
 from model import Trajectron
-from utils import prediction_output_to_trajectories
 
 standardization = {
     'PEDESTRIAN': {
@@ -241,7 +240,7 @@ def main():
 
                 submission.predictions.append(pred)
 
-    save_submission_proto('dev_moscow_and_ood_submission_1000.pb', submission=submission)
+    save_submission_proto('../submissions/dev_moscow_and_ood_submission_1000.pb', submission=submission)
 
 
 if __name__ == '__main__':
