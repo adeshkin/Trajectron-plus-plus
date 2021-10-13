@@ -1,8 +1,8 @@
 #!/bin/bash
 
-python train.py \
+python train_sdc.py \
 --conf ../experiments/nuScenes/train_configs/config_ph_25_maxhl_24_minhl_24_map.json \
---preprocess_workers 6 \
+--preprocess_workers 12 \
 --batch_size 128 \
 --log_dir ../experiments/nuScenes/models \
 --train_epochs 5 \

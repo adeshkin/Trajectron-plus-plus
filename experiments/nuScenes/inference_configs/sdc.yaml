@@ -1,10 +1,10 @@
 dataset_name: 'sdc_validation'
-preprocessed_data_dir: 'processed_sdc'
+preprocessed_data_dir: 'processed_sdc_map'
 save_dir: 'visualizations/sdc_validation'
-model_name: 'models_06_Oct_2021_14_55_12_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_128' # int_ee int_ee_me robot vel_ee
-model_epoch: 4000
+model_name: 'models_07_Oct_2021_18_09_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_128'
+checkpoint_name: 'ep_1_step_28000'
 num_samples: 1
-scene_idx: 47
+scene_idx: 0
 ph: 25
 max_h: 24
 min_h: 24

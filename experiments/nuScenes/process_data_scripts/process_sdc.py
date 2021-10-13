@@ -7,11 +7,13 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import itertools
+import torch
 
-from .kalman_filter import NonlinearKinematicBicycle
+#from .kalman_filter import NonlinearKinematicBicycle
 
 # sys.path.append("/home/adeshkin/Desktop/shifts/sdc")
-from ysdc_dataset_api.utils import get_file_paths, scenes_generator
+from ysdc_dataset_api.utils import get_file_paths, scenes_generator, get_latest_track_state_by_id, get_to_track_frame_transform
+from ysdc_dataset_api.features import FeatureRenderer
 
 sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
@@ -69,6 +71,63 @@ standardization = {
             'd°': {'mean': 0, 'std': 1}
         }
     }
+}
+
+renderer_config = {
+    # parameters of feature maps to render
+    'feature_map_params': {
+        'rows': 400,
+        'cols': 400,
+        'resolution': 0.25,  # number of meters in one pixel
+    },
+    'renderers_groups': [
+        # Having several feature map groups
+        # allows to independently render feature maps with different history length.
+        # This could be useful to render static features (road graph, etc.) once.
+        {
+            # start: int, first timestamp into the past to render, 0 – prediction time
+            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
+            # step: int, grid step size,
+            #            step=1 renders all points between start and stop,
+            #            step=2 renders every second point, etc.
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                # each value is rendered at its own channel
+                # occupancy -- 1 channel
+                # velocity -- 2 channels (x, y)
+                # acceleration -- 2 channels (x, y)
+                # yaw -- 1 channel
+                {'vehicles': ['occupancy']},
+                # only occupancy and velocity are available for pedestrians
+                {'pedestrians': ['occupancy']},
+            ]
+        },
+        {
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                {
+                    'road_graph': [
+                        'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
+                        'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
+                        'road_polygons',
+                    ]
+                }
+            ]
+        }
+    ]
 }
 
 
@@ -172,7 +231,7 @@ def process_scene(sdc_scene, env):
     data.sort_values('frame_id', inplace=True)
     max_timesteps = data['frame_id'].max()
     
-    # center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
+    center_y, center_x, width, height = get_viewport(data['x'].to_numpy(), data['y'].to_numpy())
     
     x_min = np.round(data['x'].min())
     x_max = np.round(data['x'].max())
@@ -184,14 +243,26 @@ def process_scene(sdc_scene, env):
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
     ###
-    # prediction_request_agent_ids = set(str(pr.track_id) for pr in sdc_scene.prediction_requests)
-    # scene.prediction_request_agent_ids = prediction_request_agent_ids
-    #scene.x_min = x_min
-    #scene.y_min = y_min
-    #scene.center_x = center_x
-    #scene.center_y = center_y
-    #scene.width = width
-    #scene.height = height
+    prediction_request_agent_ids = set(str(pr.track_id) for pr in sdc_scene.prediction_requests)
+    scene.prediction_request_agent_ids = prediction_request_agent_ids
+    scene.x_min = x_min
+    scene.y_min = y_min
+    scene.center_x = center_x
+    scene.center_y = center_y
+    scene.width = width
+    scene.height = height
+
+    prediction_request_agent_ids = {str(pr.track_id): pr for pr in sdc_scene.prediction_requests}
+    map_ = []
+    for request in prediction_request_agent_ids.values():
+        track = get_latest_track_state_by_id(sdc_scene, request.track_id)
+        to_track_frame_tf = get_to_track_frame_transform(track)
+        renderer = FeatureRenderer(renderer_config)
+
+        map_.append(renderer.produce_features(sdc_scene, to_track_frame_tf)['feature_maps'])
+
+    tensor_map = np.stack(map_, axis=0)
+    scene.map = torch.from_numpy(tensor_map)
     ###
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
@@ -207,59 +278,7 @@ def process_scene(sdc_scene, env):
         x = node_values[:, 0]
         y = node_values[:, 1]
         heading = node_df['heading'].values
-        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
-            # Kalman filter Agenti
-            vx = derivative_of(x, scene.dt)
-            vy = derivative_of(y, scene.dt)
-            velocity = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1)
 
-            filter_veh = NonlinearKinematicBicycle(dt=scene.dt, sMeasurement=1.0)
-            P_matrix = None
-            for i in range(len(x)):
-                if i == 0:  # initalize KF
-                    # initial P_matrix
-                    P_matrix = np.identity(4)
-                elif i < len(x):
-                    # assign new est values
-                    x[i] = x_vec_est_new[0][0]
-                    y[i] = x_vec_est_new[1][0]
-                    heading[i] = x_vec_est_new[2][0]
-                    velocity[i] = x_vec_est_new[3][0]
-
-                if i < len(x) - 1:  # no action on last data
-                    # filtering
-                    x_vec_est = np.array([[x[i]],
-                                          [y[i]],
-                                          [heading[i]],
-                                          [velocity[i]]])
-                    z_new = np.array([[x[i + 1]],
-                                      [y[i + 1]],
-                                      [heading[i + 1]],
-                                      [velocity[i + 1]]])
-                    x_vec_est_new, P_matrix_new = filter_veh.predict_and_update(
-                        x_vec_est=x_vec_est,
-                        u_vec=np.array([[0.], [0.]]),
-                        P_matrix=P_matrix,
-                        z_new=z_new
-                    )
-                    P_matrix = P_matrix_new
-
-            curvature, pl, _ = trajectory_curvature(np.stack((x, y), axis=-1))
-            if pl < 1.0:  # vehicle is "not" moving
-                x = x[0].repeat(max_timesteps + 1)
-                y = y[0].repeat(max_timesteps + 1)
-                heading = heading[0].repeat(max_timesteps + 1)
-            global total
-            global curv_0_2
-            global curv_0_1
-            total += 1
-            if pl > 1.0:
-                if curvature > .2:
-                    curv_0_2 += 1
-                    node_frequency_multiplier = 3 * int(np.floor(total / curv_0_2))
-                elif curvature > .1:
-                    curv_0_1 += 1
-                    node_frequency_multiplier = 3 * int(np.floor(total / curv_0_1))
         vx = derivative_of(x, scene.dt)
         vy = derivative_of(y, scene.dt)
         ax = derivative_of(vx, scene.dt)
@@ -307,49 +326,35 @@ def process_data(data_path, version, output_path):
     
     dataset_path = f'{data_path}/{version}_pb/'
     filepaths = get_file_paths(dataset_path)
+    random.shuffle(filepaths)
 
-    part2filepaths = dict()
-    for filepath in filepaths:
-        part = filepath.split('/')[-2]
-        if part not in part2filepaths:
-            part2filepaths[part] = [filepath]
-        else:
-            part2filepaths[part].append(filepath)
+    env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
+    attention_radius = dict()
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+    env.attention_radius = attention_radius
 
-    for part in part2filepaths:
-        env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
-        attention_radius = dict()
-        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
-        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
-        attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
-        attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+    if version == 'train':
+        num_scenes = 5
+    elif version == 'validation':
+        num_scenes = 5
 
-        env.attention_radius = attention_radius
+    scenes = []
+    sdc_scenes = itertools.islice(scenes_generator(filepaths), num_scenes)
+    for sdc_scene in tqdm(sdc_scenes):
+        scene = process_scene(sdc_scene, env)
+        scenes.append(scene)
 
-        scenes = []
-        sdc_scenes = scenes_generator(part2filepaths[part])
-        for sdc_scene in tqdm(sdc_scenes):
-            scene = process_scene(sdc_scene, env)
-            scenes.append(scene)
+    print(f'Processed {len(scenes):.2f} scenes')
 
-        print(f'Processed {len(scenes):.2f} scenes')
-
-        env.scenes = scenes
-        if len(scenes) > 0:
-            data_dict_path = os.path.join(output_path, f'{version}/sdc_{version}_{part}.pkl')
-            with open(data_dict_path, 'wb') as f:
-                dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
-            print('Saved Environment!')
-
-        global total
-        global curv_0_2
-        global curv_0_1
-        print(f"Total Nodes: {total}")
-        print(f"Curvature > 0.1 Nodes: {curv_0_1}")
-        print(f"Curvature > 0.2 Nodes: {curv_0_2}")
-        total = 0
-        curv_0_1 = 0
-        curv_0_2 = 0
+    env.scenes = scenes
+    if len(scenes) > 0:
+        data_dict_path = os.path.join(output_path, f'{version}/sdc_{version}.pkl')
+        with open(data_dict_path, 'wb') as f:
+            dill.dump(env, f, protocol=dill.HIGHEST_PROTOCOL)
+        print('Saved Environment!')
 
 
 if __name__ == '__main__':
@@ -360,4 +365,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     process_data(args.data, args.version, args.output_path)
-    # process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')
+    #process_data('/media/cds-k/Data_2/canonical-trn-dev-data/data', 'validation', '/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc')

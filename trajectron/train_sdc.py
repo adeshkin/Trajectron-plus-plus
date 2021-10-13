@@ -17,7 +17,7 @@ from environment import Environment
 from model.trajectron import Trajectron
 from model.model_registrar import ModelRegistrar
 from model.model_utils import cyclical_lr
-from model.dataset import EnvironmentDataset, collate
+from model.dataset import EnvironmentDataset, collate_sdc
 from tensorboardX import SummaryWriter
 
 from ysdc_dataset_api.dataset import MotionPredictionDatasetTrain
@@ -156,24 +156,24 @@ def main():
         hyperparams = json.load(conf_json)
 
     # Add hyperparams from arguments
-    hyperparams['dynamic_edges'] = args.dynamic_edges
-    hyperparams['edge_state_combine_method'] = args.edge_state_combine_method
-    hyperparams['edge_influence_combine_method'] = args.edge_influence_combine_method
-    hyperparams['edge_addition_filter'] = args.edge_addition_filter
-    hyperparams['edge_removal_filter'] = args.edge_removal_filter
+    # hyperparams['dynamic_edges'] = args.dynamic_edges
+    # hyperparams['edge_state_combine_method'] = args.edge_state_combine_method
+    # hyperparams['edge_influence_combine_method'] = args.edge_influence_combine_method
+    # hyperparams['edge_addition_filter'] = args.edge_addition_filter
+    # hyperparams['edge_removal_filter'] = args.edge_removal_filter
     hyperparams['batch_size'] = args.batch_size
-    hyperparams['k_eval'] = args.k_eval
-    hyperparams['offline_scene_graph'] = args.offline_scene_graph
-    hyperparams['incl_robot_node'] = args.incl_robot_node
-    hyperparams['node_freq_mult_train'] = args.node_freq_mult_train
-    hyperparams['node_freq_mult_eval'] = args.node_freq_mult_eval
-    hyperparams['scene_freq_mult_train'] = args.scene_freq_mult_train
-    hyperparams['scene_freq_mult_eval'] = args.scene_freq_mult_eval
-    hyperparams['scene_freq_mult_viz'] = args.scene_freq_mult_viz
-    hyperparams['edge_encoding'] = not args.no_edge_encoding
-    hyperparams['use_map_encoding'] = args.map_encoding
-    hyperparams['augment'] = args.augment
-    hyperparams['override_attention_radius'] = args.override_attention_radius
+    # hyperparams['k_eval'] = args.k_eval
+    # hyperparams['offline_scene_graph'] = args.offline_scene_graph
+    # hyperparams['incl_robot_node'] = args.incl_robot_node
+    # hyperparams['node_freq_mult_train'] = args.node_freq_mult_train
+    # hyperparams['node_freq_mult_eval'] = args.node_freq_mult_eval
+    # hyperparams['scene_freq_mult_train'] = args.scene_freq_mult_train
+    # hyperparams['scene_freq_mult_eval'] = args.scene_freq_mult_eval
+    # hyperparams['scene_freq_mult_viz'] = args.scene_freq_mult_viz
+    # hyperparams['edge_encoding'] = not args.no_edge_encoding
+    # hyperparams['use_map_encoding'] = args.map_encoding
+    # hyperparams['augment'] = args.augment
+    # hyperparams['override_attention_radius'] = args.override_attention_radius
 
     print('-----------------------')
     print('| TRAINING PARAMETERS |')
@@ -190,6 +190,7 @@ def main():
     print('| edge_removal_filter: %s' % args.edge_removal_filter)
     print('| MHL: %s' % hyperparams['minimum_history_length'])
     print('| PH: %s' % hyperparams['prediction_horizon'])
+    print('| use_map_encoding: %s' % hyperparams['use_map_encoding'])
     print('-----------------------')
 
     log_writer = None
@@ -232,7 +233,7 @@ def main():
             node_type=node_type
         )
         node_type_dataloader = utils.data.DataLoader(node_type_data_set,
-                                                     collate_fn=collate,
+                                                     collate_fn=collate_sdc,
                                                      pin_memory=False if args.device is 'cpu' else True,
                                                      batch_size=args.batch_size,
                                                      num_workers=args.preprocess_workers)

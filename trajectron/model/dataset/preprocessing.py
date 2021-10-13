@@ -19,7 +19,37 @@ def restore(data):
     return data
 
 
-def collate(batch_):
+def collate(batch):
+    if len(batch) == 0:
+        return batch
+    elem = batch[0]
+    if elem is None:
+        return None
+    elif isinstance(elem, container_abcs.Sequence):
+        if len(elem) == 4: # We assume those are the maps, map points, headings and patch_size
+            scene_map, scene_pts, heading_angle, patch_size = zip(*batch)
+            if heading_angle[0] is None:
+                heading_angle = None
+            else:
+                heading_angle = torch.Tensor(heading_angle)
+            map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
+                                                                     scene_pts=torch.Tensor(scene_pts),
+                                                                     patch_size=patch_size[0],
+                                                                     rotation=heading_angle)
+
+            return map
+        transposed = zip(*batch)
+        return [collate(samples) for samples in transposed]
+    elif isinstance(elem, container_abcs.Mapping):
+        # We have to dill the neighbors structures. Otherwise each tensor is put into
+        # shared memory separately -> slow, file pointer overhead
+        # we only do this in multiprocessing
+        neighbor_dict = {key: [d[key] for d in batch] for key in elem}
+        return dill.dumps(neighbor_dict) if torch.utils.data.get_worker_info() else neighbor_dict
+    return default_collate(batch)
+
+
+def collate_sdc(batch_):
     batch = []
     map_ = []
 
@@ -40,18 +70,12 @@ def collate(batch_):
     elif isinstance(elem, container_abcs.Sequence):
         if len(elem) == 4: # We assume those are the maps, map points, headings and patch_size
             scene_map, scene_pts, heading_angle, patch_size = zip(*batch)
-            if heading_angle[0] is None:
-                heading_angle = None
-            else:
-                heading_angle = torch.Tensor(heading_angle)
-            map = scene_map[0].get_cropped_maps_from_scene_map_batch(scene_map,
-                                                                     scene_pts=torch.Tensor(scene_pts),
-                                                                     patch_size=patch_size[0],
-                                                                     rotation=heading_angle)
+            map = scene_map[0]
+
             return map
         transposed = zip(*batch)
         tensor_map = np.stack(map_, axis=0)
-        return [collate(samples) for samples in transposed], torch.from_numpy(tensor_map)
+        return [collate_sdc(samples) for samples in transposed], torch.from_numpy(tensor_map)
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
         # shared memory separately -> slow, file pointer overhead
@@ -196,9 +220,8 @@ def get_node_timestep_data(env, scene, t, node, state, pred_state,
             else:
                 heading_angle = None
 
-            scene_map = scene.map[node.type]
+            scene_map = scene.map# [node.type]
             map_point = x[-1, :2]
-
 
             patch_size = hyperparams['map_encoder'][node.type]['patch_size']
             map_tuple = (scene_map, map_point, heading_angle, patch_size)

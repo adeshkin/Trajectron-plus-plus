@@ -50,16 +50,16 @@ class ModelRegistrar(nn.Module):
     def print_model_names(self):
         print(self.model_dict.keys())
 
-    def save_models(self, curr_iter):
+    def save_models(self, checkpoint_name):
         # Create the model directiory if it's not present.
-        save_path = os.path.join(self.model_dir, f'{curr_iter}.pt')
+        save_path = os.path.join(self.model_dir, f'{checkpoint_name}.pt')
 
         torch.save(self.model_dict, save_path)
 
-    def load_models(self, iter_num):
+    def load_models(self, checkpoint_name):
         self.model_dict.clear()
         
-        save_path = os.path.join(self.model_dir, f'{iter_num}.pt')
+        save_path = os.path.join(self.model_dir, f'{checkpoint_name}.pt')
 
         print('')
         print('Loading from ' + save_path)

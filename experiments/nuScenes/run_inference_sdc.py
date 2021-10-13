@@ -10,12 +10,114 @@ import matplotlib.pyplot as plt
 import torch
 import gc
 import sys
+from torch import nn, optim, utils
+
+from ysdc_dataset_api.dataset import MotionPredictionDatasetTest
+from ysdc_dataset_api.features import FeatureRenderer
 
 sys.path.append("../../trajectron")
 
 from model.model_registrar import ModelRegistrar
 from model import Trajectron
 from utils import prediction_output_to_trajectories
+from environment import Environment
+from model.dataset import collate
+
+standardization = {
+    'PEDESTRIAN': {
+        'position': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1}
+        },
+        'velocity': {
+            'x': {'mean': 0, 'std': 2},
+            'y': {'mean': 0, 'std': 2}
+        },
+        'acceleration': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1}
+        }
+    },
+    'VEHICLE': {
+        'position': {
+            'x': {'mean': 0, 'std': 80},
+            'y': {'mean': 0, 'std': 80}
+        },
+        'velocity': {
+            'x': {'mean': 0, 'std': 15},
+            'y': {'mean': 0, 'std': 15},
+            'norm': {'mean': 0, 'std': 15}
+        },
+        'acceleration': {
+            'x': {'mean': 0, 'std': 4},
+            'y': {'mean': 0, 'std': 4},
+            'norm': {'mean': 0, 'std': 4}
+        },
+        'heading': {
+            'x': {'mean': 0, 'std': 1},
+            'y': {'mean': 0, 'std': 1},
+            '°': {'mean': 0, 'std': np.pi},
+            'd°': {'mean': 0, 'std': 1}
+        }
+    }
+}
+
+renderer_config = {
+    # parameters of feature maps to render
+    'feature_map_params': {
+        'rows': 400,
+        'cols': 400,
+        'resolution': 0.25,  # number of meters in one pixel
+    },
+    'renderers_groups': [
+        # Having several feature map groups
+        # allows to independently render feature maps with different history length.
+        # This could be useful to render static features (road graph, etc.) once.
+        {
+            # start: int, first timestamp into the past to render, 0 – prediction time
+            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
+            # step: int, grid step size,
+            #            step=1 renders all points between start and stop,
+            #            step=2 renders every second point, etc.
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                # each value is rendered at its own channel
+                # occupancy -- 1 channel
+                # velocity -- 2 channels (x, y)
+                # acceleration -- 2 channels (x, y)
+                # yaw -- 1 channel
+                {'vehicles': ['occupancy']},
+                # only occupancy and velocity are available for pedestrians
+                {'pedestrians': ['occupancy']},
+            ]
+        },
+        {
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                {
+                    'road_graph': [
+                        'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
+                        'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
+                        'road_polygons',
+                    ]
+                }
+            ]
+        }
+    ]
+}
 
 
 def load_model(model_dir, env, checkpoint_name=None):
@@ -78,15 +180,47 @@ def main(params):
     NCOLORS_ped = len(COLORS_ped)
 
     # Load dataset
-    with open(preprocessed_data_fn, 'rb') as f:
-        eval_env = dill.load(f, encoding='latin1')
-    eval_scenes = eval_env.scenes
+    env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
+    attention_radius = dict()
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
+    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+    attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+    env.attention_radius = attention_radius
+
+    train_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_pb/'
+    train_scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/train_tags.txt'
+
+    renderer = FeatureRenderer(renderer_config)
+
+    hyperparams = dict()
+    hyperparams['minimum_history_length'] = 24
+    hyperparams['prediction_horizon'] = 25
+
+    hyperparams['state'] = {"PEDESTRIAN": {"position": ["x", "y"], "velocity": ["x", "y"], "acceleration": ["x", "y"]},
+                            "VEHICLE": {"position": ["x", "y"], "velocity": ["x", "y"], "acceleration": ["x", "y"],
+                                        "heading": ["\u00b0", "d\u00b0"]}}
+    hyperparams['pred_state'] = {"VEHICLE": {"position": ["x", "y"]}, "PEDESTRIAN": {"position": ["x", "y"]}}
+    hyperparams['maximum_history_length'] = 24
+    node_type_data_set = MotionPredictionDatasetTest(
+        dataset_path=train_dataset_path,
+        scene_tags_fpath=train_scene_tags_fpath,
+        feature_producer=renderer,
+        hyperparams=hyperparams,
+        node_type='VEHICLE'
+    )
+    node_type_dataloader = utils.data.DataLoader(node_type_data_set,
+                                                 collate_fn=collate,
+                                                 pin_memory=True,
+                                                 batch_size=32,
+                                                 num_workers=6)
+    train_data_loader = node_type_dataloader
 
     # Load model
     log_dir = './models'
     model_name = params['model_name']
     model_dir = os.path.join(log_dir, model_name)
-    eval_stg, hyp = load_model(model_dir, eval_env, checkpoint_name=params['checkpoint_name'])
+    eval_stg, hyp = load_model(model_dir, env, checkpoint_name=params['checkpoint_name'])
 
     #
     save_dir = f"{params['save_dir']}/{params['preprocessed_data_dir'].split('processed_')[-1]}/{params['dataset_name']}/model_{model_name}_scene_{scene_idx}_ns_{num_samples}_ph_{ph}_max_h_{max_h}"

@@ -5,5 +5,5 @@ do
   python process_sdc.py \
     --data=/media/cds-k/Data_2/canonical-trn-dev-data/data \
     --version=$mode \
-    --output_path=/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc_all_boris_new_df
+    --output_path=/media/cds-k/data/nuScenes/traj++_processed_data/processed_sdc_map
 done
