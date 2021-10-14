@@ -120,7 +120,7 @@ def main(params):
                                            min_future_timesteps=ph,
                                            min_history_timesteps=params['min_h'],
                                            num_samples=num_samples,
-                                           z_mode=z_mode,
+                                           #z_mode=z_mode,
                                            gmm_mode=gmm_mode,
                                            full_dist=False,
                                            all_z_sep=True)

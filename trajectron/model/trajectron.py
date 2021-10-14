@@ -148,7 +148,7 @@ class Trajectron(object):
              neighbors_data_st,
              neighbors_edge_value,
              robot_traj_st_t,
-             map), node_id, scene_id = batch
+             _), map, node_id, scene_id, x_min, y_min = batch
 
             x = x_t.to(self.device)
             x_st_t = x_st_t.to(self.device)
@@ -158,7 +158,7 @@ class Trajectron(object):
                 map = map.to(self.device)
 
             # Run forward pass
-            predictions = model.predict(inputs=x,
+            probs, predictions = model.predict(inputs=x,
                                         inputs_st=x_st_t,
                                         first_history_indices=first_history_index,
                                         neighbors=restore(neighbors_data_st),
@@ -171,13 +171,24 @@ class Trajectron(object):
                                         gmm_mode=gmm_mode,
                                         full_dist=full_dist,
                                         all_z_sep=all_z_sep)
+            _num_preds = 5
+            B = predictions.shape[1]
 
-            predictions_np = predictions.cpu().detach().numpy()
+            probs = probs.squeeze(dim=1)
+            best_probs = torch.topk(probs, k=_num_preds, dim=1).values
+            best_plan_indices = torch.topk(probs, k=_num_preds, dim=1).indices
 
-            for k, prediction_np in enumerate(predictions_np[0]):
-                result = {'traj': prediction_np,
+            best_plans = [predictions[best_plan_indices[b], b, :, :] for b in range(B)]
+
+            uncertainty = -torch.mean(best_probs, dim=1).cpu().detach().numpy()
+            best_probs = torch.nn.functional.softmax(best_probs, dim=1).cpu().detach().numpy()
+
+            for k, plan in enumerate(best_plans):
+                result = {'trajs': plan.cpu().detach().numpy() + np.array([x_min[k], y_min[k]]),
                           'track_id': node_id[k],
-                          'scene_id': scene_id[k]}
+                          'scene_id': scene_id[k],
+                          'weights': best_probs[k],
+                          'U': uncertainty[k]}
                 results.append(result)
 
         return results

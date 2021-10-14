@@ -130,6 +130,8 @@ def process_scene(sdc_scene, env):
     data['y'] = data['y'] - y_min
 
     scene = Scene(timesteps=max_timesteps + 1, dt=dt, name=str(scene_id))
+    scene.x_min = x_min
+    scene.y_min = y_min
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]

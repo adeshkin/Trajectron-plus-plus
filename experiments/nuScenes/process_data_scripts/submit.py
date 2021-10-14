@@ -13,7 +13,7 @@ from ysdc_dataset_api.features import FeatureRenderer
 
 sys.path.append("/home/cds-k/Desktop/motion_prediction/Trajectron-plus-plus/trajectron")
 from environment import Environment
-from model.dataset import collate
+from model.dataset import collate_sdc_test
 from model.model_registrar import ModelRegistrar
 from model import Trajectron
 
@@ -132,9 +132,9 @@ def filter_ood_validation_data(scene_tags_dict):
         return False
 
 
-def load_model(model_dir, env, ts=3999):
+def load_model(model_dir, env, checkpoint=None):
     model_registrar = ModelRegistrar(model_dir, 'cuda')
-    model_registrar.load_models(ts)
+    model_registrar.load_models(checkpoint)
     with open(os.path.join(model_dir, 'config.json'), 'r') as config_json:
         hyperparams = json.load(config_json)
 
@@ -156,13 +156,13 @@ def main():
     validation_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_pb/'
     prerendered_dataset_path = None
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
-    model_dir = '../models/models_05_Oct_2021_10_30_29_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_64'
-    model_epoch = 1000
+    model_dir = '../models/models_13_Oct_2021_15_36_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32'
+    checkpoint = 'ep_1_step_16000'
     ph = 25
 
-    with open('../train_configs/config_ph_25_maxhl_24_minhl_24.json', 'r', encoding='utf-8') as conf_json:
+    with open('../train_configs/config_ph_25_maxhl_24_minhl_24_map.json', 'r', encoding='utf-8') as conf_json:
         hyperparams = json.load(conf_json)
-
+    # hyperparams['use_map_encoding'] =
     env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
     attention_radius = dict()
     attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
@@ -176,7 +176,7 @@ def main():
 
     renderer = FeatureRenderer(renderer_config)
 
-    moscow_validation_dataset = MotionPredictionDatasetTrain(
+    moscow_validation_dataset = MotionPredictionDatasetTest(
         dataset_path=validation_dataset_path,
         prerendered_dataset_path=prerendered_dataset_path,
         scene_tags_fpath=scene_tags_fpath,
@@ -187,7 +187,7 @@ def main():
     )
     # dataset_iter = iter(moscow_validation_dataset)
 
-    ood_validation_dataset = MotionPredictionDatasetTrain(
+    ood_validation_dataset = MotionPredictionDatasetTest(
         dataset_path=validation_dataset_path,
         prerendered_dataset_path=prerendered_dataset_path,
         scene_tags_fpath=scene_tags_fpath,
@@ -198,20 +198,20 @@ def main():
     )
 
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
-                                                         collate_fn=collate,
+                                                         collate_fn=collate_sdc_test,
                                                          pin_memory=True,
-                                                         batch_size=2,
+                                                         batch_size=32,
                                                          num_workers=1)
-    for batch in moscow_validation_dataloader:
-        data_item = batch
-        break
+    #for batch in moscow_validation_dataloader:
+    #    data_item = batch
+    #    break
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
-                                                      collate_fn=collate,
+                                                      collate_fn=collate_sdc_test,
                                                       pin_memory=True,
-                                                      batch_size=128,
-                                                      num_workers=10)
+                                                      batch_size=32,
+                                                      num_workers=1)
 
-    eval_stg, hyp = load_model(model_dir, env, ts=model_epoch)
+    eval_stg, hyp = load_model(model_dir, env, checkpoint=checkpoint)
 
     for dataset_key, is_ood, dataloader in zip(
             ['ood_validation', 'moscow_validation'],
@@ -225,22 +225,26 @@ def main():
                                                      num_samples=1,
                                                      z_mode=True,
                                                      gmm_mode=True,
-                                                     full_dist=False)
+                                                     full_dist=False,
+                                                     all_z_sep=True)
 
             for result in predictions:
                 pred = ObjectPrediction()
                 pred.track_id = int(result['track_id'])
                 pred.scene_id = result['scene_id']
-                pred.weighted_trajectories.append(WeightedTrajectory(
-                    trajectory=trajectory_array_to_proto(result['traj']),
-                    weight=1.0,
-                ))
-                pred.uncertainty_measure = 100
+                for k, traj in enumerate(result['trajs']):
+                    weight = result['weights'][k]
+                    pred.weighted_trajectories.append(WeightedTrajectory(
+                        trajectory=trajectory_array_to_proto(traj),
+                        weight=weight,
+                    ))
+                pred.uncertainty_measure = result['U']
                 pred.is_ood = is_ood
 
                 submission.predictions.append(pred)
-
-    save_submission_proto('../submissions/dev_moscow_and_ood_submission_1000.pb', submission=submission)
+            break
+        break
+    save_submission_proto('../submissions/dev_moscow_and_ood_submission_map_1_16000.pb', submission=submission)
 
 
 if __name__ == '__main__':

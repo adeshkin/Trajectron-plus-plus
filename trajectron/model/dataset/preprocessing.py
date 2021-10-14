@@ -86,6 +86,50 @@ def collate_sdc(batch_):
     return default_collate(batch)
 
 
+def collate_sdc_test(batch_):
+    batch = []
+    map_ = []
+    track_id = []
+    scene_id = []
+    x_min = []
+    y_min = []
+    if isinstance(batch_, list):
+        for b_ in batch_:
+            batch.append(b_['node_timestep_data'])
+            map_.append(b_['feature_maps'])
+            track_id.append(b_['track_id'])
+            scene_id.append(b_['scene_id'])
+            x_min.append(b_['x_min'])
+            y_min.append(b_['y_min'])
+    else:
+        batch = batch_
+
+    if len(batch) == 0:
+        return batch
+
+    elem = batch[0]
+
+    if elem is None:
+        return None
+    elif isinstance(elem, container_abcs.Sequence):
+        if len(elem) == 4: # We assume those are the maps, map points, headings and patch_size
+            #scene_map, scene_pts, heading_angle, patch_size = zip(*batch)
+            #map = scene_map[0]
+
+            return None
+        transposed = zip(*batch)
+        tensor_map = np.stack(map_, axis=0)
+        return [collate_sdc(samples) for samples in transposed], torch.from_numpy(tensor_map), track_id, scene_id, x_min, y_min
+    elif isinstance(elem, container_abcs.Mapping):
+        # We have to dill the neighbors structures. Otherwise each tensor is put into
+        # shared memory separately -> slow, file pointer overhead
+        # we only do this in multiprocessing
+        neighbor_dict = {key: [d[key] for d in batch] for key in elem}
+        return dill.dumps(neighbor_dict) if torch.utils.data.get_worker_info() else neighbor_dict
+
+    return default_collate(batch)
+
+
 def get_relative_robot_traj(env, state, node_traj, robot_traj, node_type, robot_type):
     # TODO: We will have to make this more generic if robot_type != node_type
     # Make Robot State relative to node
