@@ -223,7 +223,6 @@ def main():
                                                      ph,
                                                      node_types,
                                                      num_samples=1,
-                                                     z_mode=True,
                                                      gmm_mode=True,
                                                      full_dist=False,
                                                      all_z_sep=True)
@@ -242,8 +241,7 @@ def main():
                 pred.is_ood = is_ood
 
                 submission.predictions.append(pred)
-            break
-        break
+
     save_submission_proto('../submissions/dev_moscow_and_ood_submission_map_1_16000.pb', submission=submission)
 
 
