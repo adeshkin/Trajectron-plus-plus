@@ -228,6 +228,14 @@ def main():
                                                      all_z_sep=True)
 
             for result in predictions:
+                d1 = {'scene_id': 'sdgffsdg', 'track_id': 123, 'trajs': np.ones((24, 25, 2)),
+                      'probs': np.random.uniform(0, 1, 24)}
+                d2 = {'scene_id': 'fsdg', 'track_id': 13, 'trajs': np.ones((24, 25, 2)),
+                      'probs': np.random.uniform(0, 1, 24)}
+                #np.save('d.npy', d)
+                #dl = np.load('d.npy', allow_pickle=True)
+
+            for result in predictions:
                 pred = ObjectPrediction()
                 pred.track_id = int(result['track_id'])
                 pred.scene_id = result['scene_id']
