@@ -159,19 +159,20 @@ class Trajectron(object):
 
             # Run forward pass
             probs, predictions = model.predict(inputs=x,
-                                        inputs_st=x_st_t,
-                                        first_history_indices=first_history_index,
-                                        neighbors=restore(neighbors_data_st),
-                                        neighbors_edge_value=restore(neighbors_edge_value),
-                                        robot=robot_traj_st_t,
-                                        map=map,
-                                        prediction_horizon=ph,
-                                        num_samples=num_samples,
-                                        z_mode=z_mode,
-                                        gmm_mode=gmm_mode,
-                                        full_dist=full_dist,
-                                        all_z_sep=all_z_sep)
-            num_preds = 5
+                                               inputs_st=x_st_t,
+                                               first_history_indices=first_history_index,
+                                               neighbors=restore(neighbors_data_st),
+                                               neighbors_edge_value=restore(neighbors_edge_value),
+                                               robot=robot_traj_st_t,
+                                               map=map,
+                                               prediction_horizon=ph,
+                                               num_samples=num_samples,
+                                               z_mode=z_mode,
+                                               gmm_mode=gmm_mode,
+                                               full_dist=full_dist,
+                                               all_z_sep=all_z_sep)
+
+            num_preds = 3
             B = predictions.shape[1]
 
             probs = probs.squeeze(dim=1)
@@ -182,10 +183,11 @@ class Trajectron(object):
             log_topk_probs = torch.log(topk_probs)
             uncertainty = - torch.mean(log_topk_probs, dim=1)
 
-            topk_plans = [predictions[topk_indices[b], b, :, :] for b in range(B)]
-            norm_topk_probs = torch.nn.functional.softmax(log_topk_probs, dim=1).cpu().detach().numpy()
+            best_plans = [predictions[topk_indices[b], b, :, :] for b in range(B)]
+            best_probs = torch.nn.functional.softmax(log_topk_probs, dim=1).cpu().detach().numpy()
 
-            #for k, plan in enumerate(topk_plans):
+            print()
+            # for k, plan in enumerate(topk_plans):
             #    result = {'trajs': plan.cpu().detach().numpy() + np.array([x_min[k], y_min[k]]),
             #              'track_id': node_id[k],
             #              'scene_id': scene_id[k],
@@ -238,18 +240,18 @@ class Trajectron(object):
 
             # Run forward pass
             probs, predictions = model.predict(inputs=x,
-                                        inputs_st=x_st_t,
-                                        first_history_indices=first_history_index,
-                                        neighbors=neighbors_data_st,
-                                        neighbors_edge_value=neighbors_edge_value,
-                                        robot=robot_traj_st_t,
-                                        map=map,
-                                        prediction_horizon=ph,
-                                        num_samples=num_samples,
-                                        z_mode=z_mode,
-                                        gmm_mode=gmm_mode,
-                                        full_dist=full_dist,
-                                        all_z_sep=all_z_sep)
+                                               inputs_st=x_st_t,
+                                               first_history_indices=first_history_index,
+                                               neighbors=neighbors_data_st,
+                                               neighbors_edge_value=neighbors_edge_value,
+                                               robot=robot_traj_st_t,
+                                               map=map,
+                                               prediction_horizon=ph,
+                                               num_samples=num_samples,
+                                               z_mode=z_mode,
+                                               gmm_mode=gmm_mode,
+                                               full_dist=full_dist,
+                                               all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
 

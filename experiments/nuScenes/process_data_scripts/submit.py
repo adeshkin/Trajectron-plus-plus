@@ -60,8 +60,8 @@ standardization = {
 renderer_config = {
     # parameters of feature maps to render
     'feature_map_params': {
-        'rows': 2000,
-        'cols': 2000,
+        'rows': 1000,
+        'cols': 1000,
         'resolution': 0.1,  # number of meters in one pixel
     },
     'renderers_groups': [
@@ -79,7 +79,12 @@ renderer_config = {
                 {
                     'road_graph': [
                         'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
                         'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
                         'road_polygons',
                     ]
                 }
@@ -137,13 +142,13 @@ def main():
     validation_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_pb/'
     prerendered_dataset_path = None
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
-    model_dir = '../models/models_19_Oct_2021_12_35_58_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_3ch_bs_32'
-    checkpoint = 'ep_1_step_14000'
+    model_dir = '../models/models_20_Oct_2021_13_49_07_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_8_600_600_bs_32'
+    checkpoint = 'ep_1_step_21000'
     ph = 25
 
     with open('../train_configs/config_ph_25_maxhl_24_minhl_24_map.json', 'r', encoding='utf-8') as conf_json:
         hyperparams = json.load(conf_json)
-    # hyperparams['use_map_encoding'] =
+
     env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
     attention_radius = dict()
     attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
@@ -209,9 +214,7 @@ def main():
                                                      gmm_mode=True,
                                                      full_dist=False,
                                                      all_z_sep=True)
-            if True:
-                continue
-
+            '''
             for result in predictions:
                 d1 = {'scene_id': 'sdgffsdg', 'track_id': 123, 'trajs': np.ones((24, 25, 2)),
                       'probs': np.random.uniform(0, 1, 24)}
@@ -236,7 +239,7 @@ def main():
                 submission.predictions.append(pred)
 
     save_submission_proto('../submissions/dev_moscow_and_ood_submission_map_1_16000.pb', submission=submission)
-
+    '''
 
 if __name__ == '__main__':
     main()
