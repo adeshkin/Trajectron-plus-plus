@@ -145,7 +145,7 @@ class MultimodalGenerativeCVAE(object):
             if self.node_type in self.hyperparams['map_encoder']:
                 me_params = self.hyperparams['map_encoder'][self.node_type]
                 if self.cnn_type == 'sdc':
-                    input_size = (10, 400, 400)
+                    input_size = (8, 600, 600)
                     self.add_submodule(self.node_type + '/map_encoder',
                                        model_if_absent=CNNMapEncoderSdc(input_size,
                                                                         me_params['hidden_channels'],

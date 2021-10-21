@@ -6,4 +6,4 @@ python train_sdc.py \
 --batch_size 32 \
 --log_dir ../experiments/nuScenes/models \
 --train_epochs 5 \
---log_tag _int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32
+--log_tag _int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_8_600_600_bs_32

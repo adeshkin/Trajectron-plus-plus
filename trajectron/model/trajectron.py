@@ -185,13 +185,13 @@ class Trajectron(object):
             topk_plans = [predictions[topk_indices[b], b, :, :] for b in range(B)]
             norm_topk_probs = torch.nn.functional.softmax(log_topk_probs, dim=1).cpu().detach().numpy()
 
-            for k, plan in enumerate(topk_plans):
-                result = {'trajs': plan.cpu().detach().numpy() + np.array([x_min[k], y_min[k]]),
-                          'track_id': node_id[k],
-                          'scene_id': scene_id[k],
-                          'weights': best_probs[k],
-                          'U': uncertainty[k]}
-                results.append(result)
+            #for k, plan in enumerate(topk_plans):
+            #    result = {'trajs': plan.cpu().detach().numpy() + np.array([x_min[k], y_min[k]]),
+            #              'track_id': node_id[k],
+            #              'scene_id': scene_id[k],
+            #              'weights': norm_topk_probs[k],
+            #              'U': uncertainty[k]}
+            #    results.append(result)
 
         return results
 

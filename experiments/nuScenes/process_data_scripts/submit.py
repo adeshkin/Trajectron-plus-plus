@@ -60,36 +60,15 @@ standardization = {
 renderer_config = {
     # parameters of feature maps to render
     'feature_map_params': {
-        'rows': 400,
-        'cols': 400,
-        'resolution': 0.25,  # number of meters in one pixel
+        'rows': 2000,
+        'cols': 2000,
+        'resolution': 0.1,  # number of meters in one pixel
     },
     'renderers_groups': [
         # Having several feature map groups
         # allows to independently render feature maps with different history length.
         # This could be useful to render static features (road graph, etc.) once.
-        {
-            # start: int, first timestamp into the past to render, 0 – prediction time
-            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
-            # step: int, grid step size,
-            #            step=1 renders all points between start and stop,
-            #            step=2 renders every second point, etc.
-            'time_grid_params': {
-                'start': 0,
-                'stop': 0,
-                'step': 1,
-            },
-            'renderers': [
-                # each value is rendered at its own channel
-                # occupancy -- 1 channel
-                # velocity -- 2 channels (x, y)
-                # acceleration -- 2 channels (x, y)
-                # yaw -- 1 channel
-                {'vehicles': ['occupancy']},
-                # only occupancy and velocity are available for pedestrians
-                {'pedestrians': ['occupancy']},
-            ]
-        },
+
         {
             'time_grid_params': {
                 'start': 0,
@@ -100,12 +79,7 @@ renderer_config = {
                 {
                     'road_graph': [
                         'crosswalk_occupancy',
-                        'crosswalk_availability',
-                        'lane_availability',
-                        'lane_direction',
                         'lane_occupancy',
-                        'lane_priority',
-                        'lane_speed_limit',
                         'road_polygons',
                     ]
                 }
@@ -150,14 +124,21 @@ def load_model(model_dir, env, checkpoint=None):
     return stg, hyperparams
 
 
+def filter_trajectory(trajectory_tags_list):
+    if 'kMoveRight' in trajectory_tags_list or 'kMoveLeft' in trajectory_tags_list:
+        return True
+    else:
+        return False
+
+
 def main():
     submission = Submission()
 
     validation_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_pb/'
     prerendered_dataset_path = None
     scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
-    model_dir = '../models/models_13_Oct_2021_15_36_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32'
-    checkpoint = 'ep_1_step_16000'
+    model_dir = '../models/models_19_Oct_2021_12_35_58_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_3ch_bs_32'
+    checkpoint = 'ep_1_step_14000'
     ph = 25
 
     with open('../train_configs/config_ph_25_maxhl_24_minhl_24_map.json', 'r', encoding='utf-8') as conf_json:
@@ -182,6 +163,7 @@ def main():
         scene_tags_fpath=scene_tags_fpath,
         feature_producer=renderer,
         scene_tags_filter=filter_moscow_no_precipitation_data,
+        trajectory_tags_filter=filter_trajectory,
         hyperparams=hyperparams,
         node_type=node_type
     )
@@ -193,6 +175,7 @@ def main():
         scene_tags_fpath=scene_tags_fpath,
         feature_producer=renderer,
         scene_tags_filter=filter_ood_validation_data,
+        trajectory_tags_filter=filter_trajectory,
         hyperparams=hyperparams,
         node_type=node_type
     )
@@ -200,7 +183,7 @@ def main():
     moscow_validation_dataloader = utils.data.DataLoader(moscow_validation_dataset,
                                                          collate_fn=collate_sdc_test,
                                                          pin_memory=True,
-                                                         batch_size=32,
+                                                         batch_size=1,
                                                          num_workers=1)
     #for batch in moscow_validation_dataloader:
     #    data_item = batch
@@ -208,7 +191,7 @@ def main():
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate_sdc_test,
                                                       pin_memory=True,
-                                                      batch_size=32,
+                                                      batch_size=1,
                                                       num_workers=1)
 
     eval_stg, hyp = load_model(model_dir, env, checkpoint=checkpoint)
@@ -226,6 +209,8 @@ def main():
                                                      gmm_mode=True,
                                                      full_dist=False,
                                                      all_z_sep=True)
+            if True:
+                continue
 
             for result in predictions:
                 d1 = {'scene_id': 'sdgffsdg', 'track_id': 123, 'trajs': np.ones((24, 25, 2)),

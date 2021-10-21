@@ -93,36 +93,14 @@ standardization = {
 renderer_config = {
     # parameters of feature maps to render
     'feature_map_params': {
-        'rows': 400,
-        'cols': 400,
-        'resolution': 0.25,  # number of meters in one pixel
+        'rows': 1000,
+        'cols': 1000,
+        'resolution': 0.1,  # number of meters in one pixel
     },
     'renderers_groups': [
         # Having several feature map groups
         # allows to independently render feature maps with different history length.
         # This could be useful to render static features (road graph, etc.) once.
-        {
-            # start: int, first timestamp into the past to render, 0 – prediction time
-            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
-            # step: int, grid step size,
-            #            step=1 renders all points between start and stop,
-            #            step=2 renders every second point, etc.
-            'time_grid_params': {
-                'start': 0,
-                'stop': 0,
-                'step': 1,
-            },
-            'renderers': [
-                # each value is rendered at its own channel
-                # occupancy -- 1 channel
-                # velocity -- 2 channels (x, y)
-                # acceleration -- 2 channels (x, y)
-                # yaw -- 1 channel
-                {'vehicles': ['occupancy']},
-                # only occupancy and velocity are available for pedestrians
-                {'pedestrians': ['occupancy']},
-            ]
-        },
         {
             'time_grid_params': {
                 'start': 0,

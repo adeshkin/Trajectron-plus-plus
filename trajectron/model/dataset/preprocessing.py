@@ -74,7 +74,7 @@ def collate_sdc(batch_):
 
             return None
         transposed = zip(*batch)
-        tensor_map = np.stack(map_, axis=0)
+        tensor_map = np.stack(map_, axis=0)[:, :, 200:800, 400:]
         return [collate_sdc(samples) for samples in transposed], torch.from_numpy(tensor_map)
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
@@ -118,7 +118,7 @@ def collate_sdc_test(batch_):
 
             return None
         transposed = zip(*batch)
-        tensor_map = np.stack(map_, axis=0)
+        tensor_map = np.stack(map_, axis=0)[:, :, 200:800, 400:]
         return [collate_sdc(samples) for samples in transposed], torch.from_numpy(tensor_map), track_id, scene_id, x_min, y_min
     elif isinstance(elem, container_abcs.Mapping):
         # We have to dill the neighbors structures. Otherwise each tensor is put into
