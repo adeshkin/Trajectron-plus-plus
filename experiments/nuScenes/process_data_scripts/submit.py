@@ -57,18 +57,39 @@ standardization = {
 }
 
 
-renderer_config = {
+renderer_config_13 = {
     # parameters of feature maps to render
     'feature_map_params': {
-        'rows': 1000,
-        'cols': 1000,
-        'resolution': 0.1,  # number of meters in one pixel
+        'rows': 400,
+        'cols': 400,
+        'resolution': 0.25,  # number of meters in one pixel
     },
     'renderers_groups': [
         # Having several feature map groups
         # allows to independently render feature maps with different history length.
         # This could be useful to render static features (road graph, etc.) once.
-
+{
+            # start: int, first timestamp into the past to render, 0 – prediction time
+            # stop: int, last timestamp to render inclusively, 24 – farthest known point into the past
+            # step: int, grid step size,
+            #            step=1 renders all points between start and stop,
+            #            step=2 renders every second point, etc.
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                # each value is rendered at its own channel
+                # occupancy -- 1 channel
+                # velocity -- 2 channels (x, y)
+                # acceleration -- 2 channels (x, y)
+                # yaw -- 1 channel
+                {'vehicles': ['occupancy']},
+                # only occupancy and velocity are available for pedestrians
+                {'pedestrians': ['occupancy']},
+            ]
+        },
         {
             'time_grid_params': {
                 'start': 0,
@@ -86,6 +107,41 @@ renderer_config = {
                         'lane_priority',
                         'lane_speed_limit',
                         'road_polygons',
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+renderer_config_20 = {
+    # parameters of feature maps to render
+    'feature_map_params': {
+        'rows': 1000,
+        'cols': 1000,
+        'resolution': 0.1,  # number of meters in one pixel
+    },
+    'renderers_groups': [
+        # Having several feature map groups
+        # allows to independently render feature maps with different history length.
+        # This could be useful to render static features (road graph, etc.) once.
+        {
+            'time_grid_params': {
+                'start': 0,
+                'stop': 0,
+                'step': 1,
+            },
+            'renderers': [
+                {
+                    'road_graph': [
+                        'crosswalk_occupancy',
+                        'crosswalk_availability',
+                        'lane_availability',
+                        'lane_direction',
+                        'lane_occupancy',
+                        'lane_priority',
+                        'lane_speed_limit',
+                        'road_polygons'
                     ]
                 }
             ]
@@ -139,14 +195,22 @@ def filter_trajectory(trajectory_tags_list):
 def main():
     submission = Submission()
 
-    validation_dataset_path = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_pb/'
+    mode = 'validation'  # 'train'
+    validation_dataset_path = f'/media/cds-k/Data_2/canonical-trn-dev-data/data/{mode}_pb/'
     prerendered_dataset_path = None
-    scene_tags_fpath = '/media/cds-k/Data_2/canonical-trn-dev-data/data/validation_tags.txt'
-    model_dir = '../models/models_20_Oct_2021_13_49_07_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_8_600_600_bs_32'
-    checkpoint = 'ep_1_step_21000'
+    scene_tags_fpath = f'/media/cds-k/Data_2/canonical-trn-dev-data/data/{mode}_tags.txt'
+    # models_07_Oct_2021_18_09_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_bs_128
+    # 28000
+    # models_13_Oct_2021_15_36_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32
+    # 106000
+    # models_20_Oct_2021_13_49_07_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_8_600_600_bs_32
+    # 21000
+
+    model_dir = '../models/models_13_Oct_2021_15_36_40_int_ee_sdc_ph_25_maxhl_24_min_hl_24_map_bs_32'
+    checkpoint = 'ep_1_step_106000'
     ph = 25
 
-    with open('../train_configs/config_ph_25_maxhl_24_minhl_24_map.json', 'r', encoding='utf-8') as conf_json:
+    with open(f'{model_dir}/config.json', 'r', encoding='utf-8') as conf_json:
         hyperparams = json.load(conf_json)
 
     env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
@@ -160,7 +224,7 @@ def main():
     node_type = env.NodeType[0]
     node_types = [node_type]
 
-    renderer = FeatureRenderer(renderer_config)
+    renderer = FeatureRenderer(renderer_config_13)
 
     moscow_validation_dataset = MotionPredictionDatasetTest(
         dataset_path=validation_dataset_path,
@@ -172,7 +236,6 @@ def main():
         hyperparams=hyperparams,
         node_type=node_type
     )
-    # dataset_iter = iter(moscow_validation_dataset)
 
     ood_validation_dataset = MotionPredictionDatasetTest(
         dataset_path=validation_dataset_path,
@@ -190,9 +253,7 @@ def main():
                                                          pin_memory=True,
                                                          batch_size=1,
                                                          num_workers=1)
-    #for batch in moscow_validation_dataloader:
-    #    data_item = batch
-    #    break
+
     ood_validation_dataloader = utils.data.DataLoader(ood_validation_dataset,
                                                       collate_fn=collate_sdc_test,
                                                       pin_memory=True,
