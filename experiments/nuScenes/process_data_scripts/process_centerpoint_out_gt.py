@@ -17,7 +17,7 @@ sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of_new as derivative_of
 
-FREQUENCY = 2.5
+FREQUENCY = 2
 dt = 1 / FREQUENCY
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
 data_columns_vehicle = data_columns_vehicle.append(pd.MultiIndex.from_tuples([('heading', '°'), ('heading', 'd°')]))
@@ -119,6 +119,9 @@ def process_scene(scene, env):
         rotation = agent['object_rotation']
         yaws = [rot[-1] for rot in rotation]
         trajs = agent['object_trajectory']
+        if len(yaws) > 4:
+            continue
+
         if np.isnan(yaws).any():
             last_nan_idx = np.where(np.isnan(yaws))[0][-1]
             if last_nan_idx == len(yaws) - 1:
@@ -150,7 +153,7 @@ def process_scene(scene, env):
 
         if agent_id == scene['target_id']:
             target_trajs = scene['target']
-            frame_id = 6
+            frame_id = 4
             for traj in target_trajs:
                 data_point = pd.Series({'frame_id': frame_id,
                                         'type': our_category,
@@ -212,7 +215,7 @@ def process_scene(scene, env):
         vy = derivative_of(y, scene.dt)
         ax = derivative_of(vx, scene.dt)
         ay = derivative_of(vy, scene.dt)
-
+        '''
         if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
             v = np.stack((vx, vy), axis=-1)
             v_norm = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1, keepdims=True)
@@ -234,13 +237,14 @@ def process_scene(scene, env):
                          ('heading', 'd°'): derivative_of(heading, dt, radian=True)}
             node_data = pd.DataFrame(data_dict, columns=data_columns_vehicle)
         else:
-            data_dict = {('position', 'x'): x,
-                         ('position', 'y'): y,
-                         ('velocity', 'x'): vx,
-                         ('velocity', 'y'): vy,
-                         ('acceleration', 'x'): ax,
-                         ('acceleration', 'y'): ay}
-            node_data = pd.DataFrame(data_dict, columns=data_columns_pedestrian)
+        '''
+        data_dict = {('position', 'x'): x,
+                     ('position', 'y'): y,
+                     ('velocity', 'x'): vx,
+                     ('velocity', 'y'): vy,
+                     ('acceleration', 'x'): ax,
+                     ('acceleration', 'y'): ay}
+        node_data = pd.DataFrame(data_dict, columns=data_columns_pedestrian)
 
         node = Node(node_type=node_df.iloc[0]['type'], node_id=node_id, data=node_data,
                     frequency_multiplier=node_frequency_multiplier)
@@ -252,12 +256,12 @@ def process_scene(scene, env):
 
 def process_data(data_dir, mode, output_path):
     os.makedirs(output_path, exist_ok=True)
-    env = Environment(node_type_list=['VEHICLE', 'PEDESTRIAN'], standardization=standardization)
+    env = Environment(node_type_list=['PEDESTRIAN'], standardization=standardization)
     attention_radius = dict()
     attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
-    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
-    attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
-    attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
+    #attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
+    #attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
+    #attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
 
     env.attention_radius = attention_radius
 
@@ -289,6 +293,6 @@ if __name__ == '__main__':
     #parser.add_argument('--output_path', type=str, required=True)
     #args = parser.parse_args()
     #process_data(args.data_dir, args.mode, args.output_path)
-    process_data('/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2.5Hz',
+    process_data('/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2Hz',
                  'validation',
-                 '/home/cds-k/Desktop/centerpoint_out/motion_prediciton_validation_2.5Hz')
+                 '/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2Hz')

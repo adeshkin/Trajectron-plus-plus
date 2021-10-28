@@ -24,7 +24,7 @@ if torch.cuda.is_available():
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", help="model full path", type=str)
-parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=int)
+parser.add_argument("--checkpoint", help="model checkpoint to evaluate", type=str)
 parser.add_argument("--data", help="full path to data file", type=str)
 parser.add_argument("--output_path", help="path to output csv file", type=str)
 parser.add_argument("--output_tag", help="name tag for output file", type=str)

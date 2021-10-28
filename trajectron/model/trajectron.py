@@ -230,7 +230,7 @@ class Trajectron(object):
              neighbors_edge_value,
              robot_traj_st_t,
              map), nodes, timesteps_o = batch
-            map = torch.randn((1, 10, 400, 400))
+            #map = torch.randn((1, 10, 400, 400))
             x = x_t.to(self.device)
             x_st_t = x_st_t.to(self.device)
             if robot_traj_st_t is not None:
@@ -254,8 +254,10 @@ class Trajectron(object):
                                                all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
-
+            if np.isnan(predictions_np).any():
+                print(predictions_np)
             # Shifts prediction requests
+            '''
             if scene.prediction_request_agent_ids:
                 mask_agents = np.array(
                     [repr(node).split('/')[1] in scene.prediction_request_agent_ids for node in nodes])
@@ -264,7 +266,7 @@ class Trajectron(object):
                 predictions_np = predictions_np[:, mask_agents]
                 timesteps_o = np.array(timesteps_o)[mask_agents]
                 nodes = np.array(nodes)[mask_agents]
-
+            '''
             # Assign predictions to node
             for i, ts in enumerate(timesteps_o):
                 if ts not in predictions_dict.keys():
