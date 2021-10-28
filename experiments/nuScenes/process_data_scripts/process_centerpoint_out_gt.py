@@ -118,15 +118,22 @@ def process_scene(scene, env):
 
         rotation = agent['object_rotation']
         yaws = [rot[-1] for rot in rotation]
-
         trajs = agent['object_trajectory']
-
-        frame_id = 6 - len(yaws)
-        for traj, yaw in zip(trajs, yaws):
-            if np.isnan(yaw):
-                frame_id += 1
+        if np.isnan(yaws).any():
+            last_nan_idx = np.where(np.isnan(yaws))[0][-1]
+            if last_nan_idx == len(yaws) - 1:
                 continue
 
+            correct_yaws = yaws[last_nan_idx+1:]
+            correct_trajs = trajs[last_nan_idx+1:]
+            first_idx = last_nan_idx+1
+        else:
+            correct_yaws = yaws
+            correct_trajs = trajs
+            first_idx = 0
+
+        frame_id = first_idx
+        for traj, yaw in zip(correct_trajs, correct_yaws):
             data_point = pd.Series({'frame_id': frame_id,
                                     'type': our_category,
                                     'node_id': str(agent_id),
@@ -282,6 +289,6 @@ if __name__ == '__main__':
     #parser.add_argument('--output_path', type=str, required=True)
     #args = parser.parse_args()
     #process_data(args.data_dir, args.mode, args.output_path)
-    process_data('/home/cds-k/Desktop/centerpoint_out/motion_prediciton_validation_2.5Hz',
+    process_data('/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2.5Hz',
                  'validation',
                  '/home/cds-k/Desktop/centerpoint_out/motion_prediciton_validation_2.5Hz')
