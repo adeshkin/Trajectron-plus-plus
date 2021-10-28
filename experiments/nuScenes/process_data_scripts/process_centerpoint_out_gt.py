@@ -17,7 +17,7 @@ sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of_new as derivative_of
 
-FREQUENCY = 2
+FREQUENCY = 2.5
 dt = 1 / FREQUENCY
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
 data_columns_vehicle = data_columns_vehicle.append(pd.MultiIndex.from_tuples([('heading', '°'), ('heading', 'd°')]))
@@ -123,6 +123,10 @@ def process_scene(scene, env):
 
         frame_id = 6 - len(yaws)
         for traj, yaw in zip(trajs, yaws):
+            if np.isnan(yaw):
+                frame_id += 1
+                continue
+
             data_point = pd.Series({'frame_id': frame_id,
                                     'type': our_category,
                                     'node_id': str(agent_id),
@@ -182,15 +186,15 @@ def process_scene(scene, env):
     scene.height = height
     ###
 
-    for node_id in tqdm(pd.unique(data['node_id'])):
+    for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
-        if node_df['x'].shape[0] < 2:
-            continue
+        #if node_df['x'].shape[0] < 2:
+        #    continue
 
-        if not np.all(np.diff(node_df['frame_id']) == 1):
-            # print('Occlusion')
-            continue  # TODO Make better
+        #if not np.all(np.diff(node_df['frame_id']) == 1):
+        #    # print('Occlusion')
+        #    continue  # TODO Make better
 
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
@@ -253,7 +257,7 @@ def process_data(data_dir, mode, output_path):
     filenames = [x for x in os.listdir(f'{data_dir}/{mode}') if '.json' in x]
 
     traj_scenes = []
-    for filename in filenames:
+    for filename in tqdm(filenames):
         with open(f'{data_dir}/{mode}/{filename}', 'r') as f:
             data = json.load(f)
         for key in data:
