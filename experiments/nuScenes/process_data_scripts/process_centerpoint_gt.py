@@ -17,7 +17,7 @@ sys.path.append("../../../trajectron")
 from environment import Environment, Scene, Node
 from environment import derivative_of_new as derivative_of
 
-FREQUENCY = 2.5
+FREQUENCY = 2
 dt = 1 / FREQUENCY
 data_columns_vehicle = pd.MultiIndex.from_product([['position', 'velocity', 'acceleration', 'heading'], ['x', 'y']])
 data_columns_vehicle = data_columns_vehicle.append(pd.MultiIndex.from_tuples([('heading', '°'), ('heading', 'd°')]))
@@ -112,52 +112,40 @@ def process_scene(scene, env):
         if label not in label2category:
             print(label)
             continue
+
         our_category = label2category[label]
 
         width, length, height = agent['object_dimensions']
 
-        rotation = agent['object_rotation']
-        yaws = [rot[-1] for rot in rotation]
+        rotations = agent['object_rotation']
         trajs = agent['object_trajectory']
-        if len(yaws) > 4:
-            continue
 
-        if np.isnan(yaws).any():
-            last_nan_idx = np.where(np.isnan(yaws))[0][-1]
-            if last_nan_idx == len(yaws) - 1:
-                continue
-
-            correct_yaws = yaws[last_nan_idx+1:]
-            correct_trajs = trajs[last_nan_idx+1:]
-            first_idx = last_nan_idx+1
-        else:
-            correct_yaws = yaws
-            correct_trajs = trajs
-            first_idx = 0
-
-        frame_id = first_idx
-        for traj, yaw in zip(correct_trajs, correct_yaws):
-            data_point = pd.Series({'frame_id': frame_id,
-                                    'type': our_category,
-                                    'node_id': str(agent_id),
-                                    'robot': False,
-                                    'x': traj[0],
-                                    'y': traj[1],
-                                    'z': 0.0,
-                                    'length': length,
-                                    'width': width,
-                                    'height': height,
-                                    'heading': yaw})
-            data = data.append(data_point, ignore_index=True)
-            frame_id += 1
+        t2frame_id = {'0.0': 0, '0.5': 1, '1.0': 2, '1.5': 3, '2.0': 4}
+        for t in trajs:
+            if t in t2frame_id:
+                frame_id = t2frame_id[t]
+                yaw = rotations[t][-1]
+                traj = trajs[t]
+                data_point = pd.Series({'frame_id': frame_id,
+                                        'type': our_category,
+                                        'node_id': agent_id,
+                                        'robot': False,
+                                        'x': traj[0],
+                                        'y': traj[1],
+                                        'z': 0.0,
+                                        'length': length,
+                                        'width': width,
+                                        'height': height,
+                                        'heading': yaw})
+                data = data.append(data_point, ignore_index=True)
 
         if agent_id == scene['target_id']:
             target_trajs = scene['target']
-            frame_id = 4
+            frame_id = 5
             for traj in target_trajs:
                 data_point = pd.Series({'frame_id': frame_id,
                                         'type': our_category,
-                                        'node_id': str(agent_id),
+                                        'node_id': agent_id,
                                         'robot': False,
                                         'x': traj[0],
                                         'y': traj[1],
@@ -199,45 +187,16 @@ def process_scene(scene, env):
     for node_id in pd.unique(data['node_id']):
         node_frequency_multiplier = 1
         node_df = data[data['node_id'] == node_id]
-        #if node_df['x'].shape[0] < 2:
-        #    continue
-
-        #if not np.all(np.diff(node_df['frame_id']) == 1):
-        #    # print('Occlusion')
-        #    continue  # TODO Make better
 
         node_values = node_df[['x', 'y']].values
         x = node_values[:, 0]
         y = node_values[:, 1]
-        heading = node_df['heading'].values
 
         vx = derivative_of(x, scene.dt)
         vy = derivative_of(y, scene.dt)
         ax = derivative_of(vx, scene.dt)
         ay = derivative_of(vy, scene.dt)
-        '''
-        if node_df.iloc[0]['type'] == env.NodeType.VEHICLE:
-            v = np.stack((vx, vy), axis=-1)
-            v_norm = np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1, keepdims=True)
-            heading_v = np.divide(v, v_norm, out=np.zeros_like(v), where=(v_norm > 1.))
-            heading_x = heading_v[:, 0]
-            heading_y = heading_v[:, 1]
 
-            data_dict = {('position', 'x'): x,
-                         ('position', 'y'): y,
-                         ('velocity', 'x'): vx,
-                         ('velocity', 'y'): vy,
-                         ('velocity', 'norm'): np.linalg.norm(np.stack((vx, vy), axis=-1), axis=-1),
-                         ('acceleration', 'x'): ax,
-                         ('acceleration', 'y'): ay,
-                         ('acceleration', 'norm'): np.linalg.norm(np.stack((ax, ay), axis=-1), axis=-1),
-                         ('heading', 'x'): heading_x,
-                         ('heading', 'y'): heading_y,
-                         ('heading', '°'): heading,
-                         ('heading', 'd°'): derivative_of(heading, dt, radian=True)}
-            node_data = pd.DataFrame(data_dict, columns=data_columns_vehicle)
-        else:
-        '''
         data_dict = {('position', 'x'): x,
                      ('position', 'y'): y,
                      ('velocity', 'x'): vx,
@@ -254,26 +213,23 @@ def process_scene(scene, env):
     return scene
 
 
-def process_data(data_dir, mode, output_path):
+def process_data(data_dir, output_path):
     os.makedirs(output_path, exist_ok=True)
-    env = Environment(node_type_list=['PEDESTRIAN'], standardization=standardization)
-    attention_radius = dict()
-    attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
-    #attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.VEHICLE)] = 20.0
-    #attention_radius[(env.NodeType.VEHICLE, env.NodeType.PEDESTRIAN)] = 20.0
-    #attention_radius[(env.NodeType.VEHICLE, env.NodeType.VEHICLE)] = 30.0
-
-    env.attention_radius = attention_radius
-
-    filenames = [x for x in os.listdir(f'{data_dir}/{mode}') if '.json' in x]
+    filenames = [x for x in os.listdir(f'{data_dir}') if '.json' in x]
 
     for filename in filenames:
-        with open(f'{data_dir}/{mode}/{filename}', 'r') as f:
+        env = Environment(node_type_list=['PEDESTRIAN'], standardization=standardization)
+        attention_radius = dict()
+        attention_radius[(env.NodeType.PEDESTRIAN, env.NodeType.PEDESTRIAN)] = 10.0
+        env.attention_radius = attention_radius
+
+        with open(f'{data_dir}/{filename}', 'r') as f:
             data = json.load(f)
 
         traj_scenes = []
         for key in tqdm(data):
-            traj_scene = process_scene(data[key], env)
+            scene = data[key]
+            traj_scene = process_scene(scene, env)
             traj_scenes.append(traj_scene)
 
         print(f'Processed {len(traj_scenes):.2f} scenes')
@@ -288,12 +244,5 @@ def process_data(data_dir, mode, output_path):
 
 
 if __name__ == '__main__':
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('--data_dir', type=str, required=True)
-    #parser.add_argument('--mode', type=str, required=True)
-    #parser.add_argument('--output_path', type=str, required=True)
-    #args = parser.parse_args()
-    #process_data(args.data_dir, args.mode, args.output_path)
-    process_data('/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2.5Hz',
-                 'validation',
-                 '/home/cds-k/Desktop/centerpoint_out/motion_prediction_validation_2.5Hz/processed')
+    process_data('/home/cds-k/Desktop/motion_prediction/motion_prediction_validation/validation',
+                 '/home/cds-k/Desktop/motion_prediction/motion_prediction_validation/processed')

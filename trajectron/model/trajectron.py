@@ -69,7 +69,7 @@ class Trajectron(object):
          neighbors_data_st,
          neighbors_edge_value,
          robot_traj_st_t,
-         _), map = batch
+         map) = batch
 
         x = x_t.to(self.device)
         y = y_t.to(self.device)
@@ -254,8 +254,8 @@ class Trajectron(object):
                                                all_z_sep=all_z_sep)
 
             predictions_np = predictions.cpu().detach().numpy()
-            if np.isnan(predictions_np).any():
-                print(predictions_np)
+            #if np.isnan(predictions_np).any():
+            #    print(predictions_np)
             # Shifts prediction requests
             '''
             if scene.prediction_request_agent_ids:
